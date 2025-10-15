@@ -59,7 +59,11 @@ const Navbar = () => {
           <div className="hidden md:flex items-center gap-4">
             {isAuthenticated ? (
               <>
-                <Link to="/dashboard">
+                <Link to={
+                  user?.role === 'admin' ? '/admin/dashboard' :
+                  user?.role === 'instructor' ? '/instructor/dashboard' :
+                  '/dashboard'
+                }>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -72,6 +76,11 @@ const Navbar = () => {
                 <div className="flex items-center gap-3 px-4 py-2 bg-white/5 rounded-full border border-white/10">
                   <User className="w-4 h-4 text-purple-400" />
                   <span className="text-sm text-white">{user?.name}</span>
+                  {user?.role && (
+                    <span className="text-xs px-2 py-0.5 bg-purple-500/30 text-purple-300 rounded-full">
+                      {user.role}
+                    </span>
+                  )}
                 </div>
                 <motion.button
                   whileHover={{ scale: 1.05 }}

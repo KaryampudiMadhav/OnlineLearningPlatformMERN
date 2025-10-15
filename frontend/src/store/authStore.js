@@ -10,12 +10,15 @@ const useAuthStore = create((set) => ({
   login: async (email, password) => {
     try {
       const response = await api.post('/auth/login', { email, password });
-      const { token, user } = response.data;
+      const { user, accessToken } = response.data.data;
       
-      localStorage.setItem('token', token);
-      set({ user, token, isAuthenticated: true });
-      return { success: true };
+      console.log('Login response:', { token: accessToken?.substring(0, 20) + '...', user });
+      
+      localStorage.setItem('token', accessToken);
+      set({ user, token: accessToken, isAuthenticated: true });
+      return { success: true, user };
     } catch (error) {
+      console.error('Login error:', error.response?.data);
       return { 
         success: false, 
         message: error.response?.data?.message || 'Login failed' 
@@ -26,11 +29,11 @@ const useAuthStore = create((set) => ({
   signup: async (name, email, password, role) => {
     try {
       const response = await api.post('/auth/register', { name, email, password, role });
-      const { token, user } = response.data;
+      const { user, accessToken } = response.data.data;
       
-      localStorage.setItem('token', token);
-      set({ user, token, isAuthenticated: true });
-      return { success: true };
+      localStorage.setItem('token', accessToken);
+      set({ user, token: accessToken, isAuthenticated: true });
+      return { success: true, user };
     } catch (error) {
       return { 
         success: false, 
@@ -48,11 +51,16 @@ const useAuthStore = create((set) => ({
     try {
       set({ loading: true });
       const response = await api.get('/auth/me');
-      set({ user: response.data.user, loading: false });
-    } catch {
+      const user = response.data.data;
+      set({ user, loading: false });
+    } catch (error) {
+      console.error('getMe error:', error.response?.status, error.response?.data);
       set({ loading: false });
-      localStorage.removeItem('token');
-      set({ user: null, token: null, isAuthenticated: false });
+      // Only logout if token is invalid, not for network errors
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        set({ user: null, token: null, isAuthenticated: false });
+      }
     }
   },
 }));

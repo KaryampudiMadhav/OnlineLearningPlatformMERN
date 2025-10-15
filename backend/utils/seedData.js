@@ -27,6 +27,87 @@ const seedCourses = [
       'No programming experience required',
       'A computer with internet connection',
     ],
+    curriculum: [
+      {
+        title: 'Introduction to HTML',
+        description: 'Learn the fundamentals of HTML and create your first web page',
+        duration: '3 hours',
+        lessons: [
+          {
+            title: 'What is HTML?',
+            duration: '15 min',
+            isPreview: true,
+            videoUrl: 'https://www.youtube.com/watch?v=qz0aGYrrlhU',
+            content: 'HTML (HyperText Markup Language) is the standard markup language for creating web pages. In this lesson, we will cover the basics of HTML structure, tags, and elements.'
+          },
+          {
+            title: 'HTML Tags and Elements',
+            duration: '25 min',
+            isPreview: true,
+            videoUrl: 'https://www.youtube.com/watch?v=salY_Sm6mv4',
+            content: 'Learn about common HTML tags like <div>, <p>, <h1>-<h6>, <a>, <img>, and how to use them to structure your content.'
+          },
+          {
+            title: 'Building Your First Web Page',
+            duration: '30 min',
+            isPreview: false,
+            videoUrl: 'https://www.youtube.com/watch?v=pQN-pnXPaVg',
+            content: 'Put everything together and create your first complete HTML page with headings, paragraphs, images, and links.'
+          }
+        ]
+      },
+      {
+        title: 'CSS Fundamentals',
+        description: 'Master CSS to style and design beautiful websites',
+        duration: '4 hours',
+        lessons: [
+          {
+            title: 'Introduction to CSS',
+            duration: '20 min',
+            isPreview: true,
+            videoUrl: 'https://www.youtube.com/watch?v=1PnVor36_40',
+            content: 'CSS (Cascading Style Sheets) controls the presentation of HTML elements. Learn how to add styles, colors, fonts, and layouts to your web pages.'
+          },
+          {
+            title: 'CSS Selectors and Properties',
+            duration: '35 min',
+            isPreview: false,
+            content: 'Explore different types of CSS selectors (class, id, element) and common properties like color, font-size, margin, padding, and more.'
+          },
+          {
+            title: 'Flexbox Layout',
+            duration: '40 min',
+            isPreview: false,
+            content: 'Master CSS Flexbox to create responsive layouts easily. Learn flex containers, flex items, and common flexbox properties.'
+          }
+        ]
+      },
+      {
+        title: 'JavaScript Essentials',
+        description: 'Learn JavaScript programming from scratch',
+        duration: '8 hours',
+        lessons: [
+          {
+            title: 'JavaScript Basics',
+            duration: '30 min',
+            isPreview: true,
+            content: 'Introduction to JavaScript: variables, data types, operators, and basic syntax. Learn how to write and run JavaScript code.'
+          },
+          {
+            title: 'Functions and Scope',
+            duration: '45 min',
+            isPreview: false,
+            content: 'Understanding functions, parameters, return values, and scope in JavaScript. Learn about function declarations and expressions.'
+          },
+          {
+            title: 'DOM Manipulation',
+            duration: '50 min',
+            isPreview: false,
+            content: 'Learn how to interact with HTML elements using JavaScript. Select elements, change styles, handle events, and create dynamic content.'
+          }
+        ]
+      }
+    ],
     tags: ['HTML', 'CSS', 'JavaScript', 'React', 'Node.js', 'MongoDB'],
     language: 'English',
     isPublished: true,
@@ -55,6 +136,77 @@ const seedCourses = [
     requirements: [
       'Basic mathematics knowledge',
       'No prior programming experience required',
+    ],
+    curriculum: [
+      {
+        title: 'Python Fundamentals',
+        description: 'Get started with Python programming basics',
+        duration: '5 hours',
+        lessons: [
+          {
+            title: 'Installing Python and Setting Up Environment',
+            duration: '20 min',
+            isPreview: true,
+            content: 'Learn how to install Python, set up your development environment, and write your first Python program. We will use Anaconda distribution for data science.'
+          },
+          {
+            title: 'Python Syntax and Variables',
+            duration: '30 min',
+            isPreview: true,
+            content: 'Understanding Python syntax, variables, data types (int, float, string, boolean), and basic operations.'
+          },
+          {
+            title: 'Lists, Tuples, and Dictionaries',
+            duration: '40 min',
+            isPreview: false,
+            content: 'Master Python data structures: lists for ordered collections, tuples for immutable data, and dictionaries for key-value pairs.'
+          }
+        ]
+      },
+      {
+        title: 'NumPy for Numerical Computing',
+        description: 'Learn NumPy for efficient numerical operations',
+        duration: '6 hours',
+        lessons: [
+          {
+            title: 'Introduction to NumPy Arrays',
+            duration: '35 min',
+            isPreview: true,
+            content: 'NumPy arrays are the foundation of data science in Python. Learn how to create, manipulate, and perform operations on NumPy arrays.'
+          },
+          {
+            title: 'Array Operations and Broadcasting',
+            duration: '45 min',
+            isPreview: false,
+            content: 'Master array indexing, slicing, reshaping, and broadcasting rules for efficient mathematical operations.'
+          }
+        ]
+      },
+      {
+        title: 'Data Analysis with Pandas',
+        description: 'Master Pandas for data manipulation and analysis',
+        duration: '8 hours',
+        lessons: [
+          {
+            title: 'Pandas DataFrames and Series',
+            duration: '40 min',
+            isPreview: true,
+            content: 'Introduction to Pandas DataFrames (2D tables) and Series (1D arrays). Learn how to load, view, and explore datasets.'
+          },
+          {
+            title: 'Data Cleaning and Preprocessing',
+            duration: '50 min',
+            isPreview: false,
+            content: 'Handle missing data, remove duplicates, fix data types, and prepare your data for analysis.'
+          },
+          {
+            title: 'Data Visualization with Matplotlib',
+            duration: '45 min',
+            isPreview: false,
+            content: 'Create stunning visualizations: line plots, bar charts, scatter plots, histograms, and more using Matplotlib and Seaborn.'
+          }
+        ]
+      }
     ],
     tags: ['Python', 'Data Science', 'Machine Learning', 'Pandas', 'NumPy'],
     language: 'English',
@@ -85,6 +237,58 @@ const seedCourses = [
       'No prior design experience needed',
       'A computer with internet connection',
     ],
+    curriculum: [
+      {
+        title: 'Design Fundamentals',
+        description: 'Learn the core principles of UI/UX design',
+        duration: '4 hours',
+        lessons: [
+          {
+            title: 'What is UI/UX Design?',
+            duration: '25 min',
+            isPreview: true,
+            content: 'Understanding the difference between UI (User Interface) and UX (User Experience). Learn why good design matters and impacts business success.'
+          },
+          {
+            title: 'Design Principles: Layout, Color, Typography',
+            duration: '40 min',
+            isPreview: true,
+            content: 'Master fundamental design principles: visual hierarchy, whitespace, color theory, typography, and how to create balanced, beautiful interfaces.'
+          },
+          {
+            title: 'User-Centered Design Process',
+            duration: '35 min',
+            isPreview: false,
+            content: 'Learn the UX design process: research, ideation, wireframing, prototyping, testing, and iteration. Put users at the center of your design decisions.'
+          }
+        ]
+      },
+      {
+        title: 'Figma Mastery',
+        description: 'Master Figma for professional design work',
+        duration: '8 hours',
+        lessons: [
+          {
+            title: 'Figma Interface and Tools',
+            duration: '30 min',
+            isPreview: true,
+            content: 'Get familiar with Figma interface, tools, panels, and shortcuts. Set up your workspace for efficient design workflow.'
+          },
+          {
+            title: 'Creating Wireframes in Figma',
+            duration: '45 min',
+            isPreview: false,
+            content: 'Learn how to create low-fidelity and high-fidelity wireframes. Use frames, grids, and components effectively.'
+          },
+          {
+            title: 'Prototyping and Animations',
+            duration: '50 min',
+            isPreview: false,
+            content: 'Bring your designs to life with interactive prototypes. Add transitions, animations, and create clickable flows.'
+          }
+        ]
+      }
+    ],
     tags: ['UI Design', 'UX Design', 'Figma', 'Adobe XD', 'Prototyping'],
     language: 'English',
     isPublished: true,
@@ -113,6 +317,52 @@ const seedCourses = [
     requirements: [
       'Basic JavaScript knowledge',
       'HTML and CSS fundamentals',
+    ],
+    curriculum: [
+      {
+        title: 'React Fundamentals',
+        description: 'Master the core concepts of React',
+        duration: '10 hours',
+        lessons: [
+          {
+            title: 'Introduction to React',
+            duration: '25 min',
+            isPreview: true,
+            content: 'What is React? Learn about components, JSX, and why React is the most popular JavaScript library for building user interfaces.'
+          },
+          {
+            title: 'React Components and Props',
+            duration: '40 min',
+            isPreview: true,
+            content: 'Create reusable components, pass data with props, and build component hierarchies. Learn functional and class components.'
+          },
+          {
+            title: 'React Hooks: useState and useEffect',
+            duration: '50 min',
+            isPreview: false,
+            content: 'Master React Hooks for state management and side effects. Learn when and how to use useState, useEffect, and custom hooks.'
+          }
+        ]
+      },
+      {
+        title: 'Next.js Essentials',
+        description: 'Build full-stack applications with Next.js',
+        duration: '12 hours',
+        lessons: [
+          {
+            title: 'Setting Up Next.js Project',
+            duration: '30 min',
+            isPreview: true,
+            content: 'Initialize a Next.js project, understand the folder structure, and create your first pages using the App Router.'
+          },
+          {
+            title: 'Server Components and Client Components',
+            duration: '45 min',
+            isPreview: false,
+            content: 'Understand the difference between Server and Client Components. Learn when to use each and optimize your application.'
+          }
+        ]
+      }
     ],
     tags: ['React', 'Next.js', 'JavaScript', 'TypeScript', 'Web Development'],
     language: 'English',

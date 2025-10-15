@@ -4,22 +4,40 @@ import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import Courses from './pages/Courses';
+import CourseDetail from './pages/CourseDetail';
+import Dashboard from './pages/Dashboard';
+import Profile from './pages/Profile';
+import AdminDashboard from './pages/AdminDashboard';
+import InstructorDashboard from './pages/InstructorDashboard';
+import CreateCourse from './pages/CreateCourse';
+import EditCourse from './pages/EditCourse';
 import useAuthStore from './store/authStore';
 
 // Protected Route Component
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated } = useAuthStore();
-  return isAuthenticated ? children : <Navigate to="/login" />;
+const ProtectedRoute = ({ children, allowedRoles = [] }) => {
+  const { isAuthenticated, user } = useAuthStore();
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+  
+  if (allowedRoles.length > 0 && !allowedRoles.includes(user?.role)) {
+    return <Navigate to="/dashboard" />;
+  }
+  
+  return children;
 };
 
 const App = () => {
-  const { isAuthenticated, getMe } = useAuthStore();
+  const { isAuthenticated, user, getMe } = useAuthStore();
 
   useEffect(() => {
-    if (isAuthenticated) {
+    // Only fetch user data if authenticated but don't have user data yet
+    if (isAuthenticated && !user) {
       getMe();
     }
-  }, [isAuthenticated, getMe]);
+  }, [isAuthenticated, user, getMe]);
 
   return (
     <BrowserRouter>
@@ -30,24 +48,62 @@ const App = () => {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/courses" element={<Courses />} />
+            <Route path="/courses/:id" element={<CourseDetail />} />
             
-            {/* Protected Routes - We'll add these next */}
+            {/* Student Dashboard */}
             <Route 
               path="/dashboard" 
               element={
                 <ProtectedRoute>
-                  <div className="min-h-screen flex items-center justify-center text-white">
-                    <h1 className="text-4xl">Dashboard - Coming Soon</h1>
-                  </div>
+                  <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Profile */}
+            <Route 
+              path="/profile" 
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Instructor Routes */}
+            <Route 
+              path="/instructor/dashboard" 
+              element={
+                <ProtectedRoute allowedRoles={['instructor', 'admin']}>
+                  <InstructorDashboard />
                 </ProtectedRoute>
               } 
             />
             <Route 
-              path="/courses" 
+              path="/instructor/create-course" 
               element={
-                <div className="min-h-screen flex items-center justify-center text-white">
-                  <h1 className="text-4xl">Courses - Coming Soon</h1>
-                </div>
+                <ProtectedRoute allowedRoles={['instructor', 'admin']}>
+                  <CreateCourse />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/instructor/edit-course/:id" 
+              element={
+                <ProtectedRoute allowedRoles={['instructor', 'admin']}>
+                  <EditCourse />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Admin Routes */}
+            <Route 
+              path="/admin/dashboard" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminDashboard />
+                </ProtectedRoute>
               } 
             />
           </Routes>

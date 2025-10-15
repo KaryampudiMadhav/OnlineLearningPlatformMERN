@@ -1,138 +1,230 @@
-import React from 'react';
+/* eslint-disable no-unused-vars */
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
-import { BookOpen, Users, Award, TrendingUp, ArrowRight, Star, Play } from 'lucide-react';
+import { BookOpen, Users, Award, TrendingUp, Video, MessageSquare } from 'lucide-react';
 
 const Home = () => {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden pt-32 pb-20 px-4">
-        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 blur-3xl"></div>
-        
-        <div className="container mx-auto max-w-7xl relative z-10">
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-16"
-          >
-            <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold text-white mb-6">
-              Learn Without
-              <span className="block mt-2 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                Limits
-              </span>
-            </h1>
-            <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto">
-              Master new skills with expert-led courses. Join thousands of learners achieving their goals.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link to="/signup">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full font-semibold text-lg shadow-lg shadow-purple-500/50 flex items-center gap-2"
-                >
-                  Get Started Free
-                  <ArrowRight className="w-5 h-5" />
-                </motion.button>
-              </Link>
-              
-              <Link to="/courses">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-8 py-4 bg-white/10 backdrop-blur-sm text-white rounded-full font-semibold text-lg border border-white/20 flex items-center gap-2"
-                >
-                  <Play className="w-5 h-5" />
-                  Explore Courses
-                </motion.button>
-              </Link>
-            </div>
-          </motion.div>
+  const educationQuotes = [
+    { text: "Education is the most powerful weapon which you can use to change the world.", author: "Nelson Mandela" },
+    { text: "The beautiful thing about learning is that no one can take it away from you.", author: "B.B. King" },
+    { text: "Education is not preparation for life; education is life itself.", author: "John Dewey" },
+    { text: "The more that you read, the more things you will know. The more that you learn, the more places you'll go.", author: "Dr. Seuss" }
+  ];
 
-          {/* Stats */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-20"
-          >
-            {[
-              { icon: Users, label: 'Active Students', value: '50K+' },
-              { icon: BookOpen, label: 'Online Courses', value: '1000+' },
-              { icon: Award, label: 'Expert Instructors', value: '200+' },
-              { icon: TrendingUp, label: 'Success Rate', value: '95%' },
-            ].map((stat, index) => (
+  const [currentQuote, setCurrentQuote] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentQuote((prev) => (prev + 1) % educationQuotes.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [educationQuotes.length]);
+
+  const stats = [
+    { label: 'Active Students', value: '50,000+', icon: Users },
+    { label: 'Expert Instructors', value: '100+', icon: Award },
+    { label: 'Available Courses', value: '500+', icon: BookOpen },
+    { label: 'Success Rate', value: '95%', icon: TrendingUp },
+  ];
+
+  const features = [
+    {
+      icon: Video,
+      title: 'HD Video Courses',
+      description: 'Learn from high-quality video content created by industry experts.'
+    },
+    {
+      icon: Users,
+      title: 'Expert Instructors',
+      description: 'Get guidance from professionals with years of real-world experience.'
+    },
+    {
+      icon: BookOpen,
+      title: 'Diverse Library',
+      description: 'Access hundreds of courses across multiple disciplines and skill levels.'
+    },
+    {
+      icon: Award,
+      title: 'Certificates',
+      description: 'Earn recognized certificates upon course completion to boost your career.'
+    },
+    {
+      icon: MessageSquare,
+      title: 'Community Support',
+      description: 'Connect with fellow learners and instructors in our vibrant community.'
+    },
+    {
+      icon: TrendingUp,
+      title: 'Track Progress',
+      description: 'Monitor your learning journey with detailed analytics and milestones.'
+    }
+  ];
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
+      {/* Hero Section */}
+      <section className="relative overflow-hidden pt-20 pb-32">
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <motion.div
+            className="absolute top-20 left-10 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-30"
+            animate={{
+              x: [0, 100, 0],
+              y: [0, 50, 0],
+            }}
+            transition={{
+              duration: 20,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+          />
+          <motion.div
+            className="absolute top-40 right-10 w-72 h-72 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-30"
+            animate={{
+              x: [0, -100, 0],
+              y: [0, 100, 0],
+            }}
+            transition={{
+              duration: 25,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+          />
+          <motion.div
+            className="absolute -bottom-20 left-1/2 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-30"
+            animate={{
+              x: [0, 50, 0],
+              y: [0, -50, 0],
+            }}
+            transition={{
+              duration: 15,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+          />
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center">
+            {/* Quote Section */}
+            <motion.div
+              key={currentQuote}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.8 }}
+              className="mb-8"
+            >
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-xl max-w-3xl mx-auto border border-purple-100">
+                <p className="text-2xl md:text-3xl font-serif italic text-gray-800 mb-4">
+                  "{educationQuotes[currentQuote].text}"
+                </p>
+                <p className="text-lg text-purple-600 font-semibold">
+                  — {educationQuotes[currentQuote].author}
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Main Heading */}
+            <motion.h1
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.8 }}
+              className="text-5xl md:text-7xl font-bold text-gray-900 mb-6"
+            >
+              Transform Your Future with
+              <span className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent"> Knowledge</span>
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.8 }}
+              className="text-xl md:text-2xl text-gray-600 mb-10 max-w-3xl mx-auto"
+            >
+              Join thousands of learners worldwide and unlock your potential with our expert-led courses
+            </motion.p>
+
+            {/* CTA Buttons */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6, duration: 0.8 }}
+              className="flex flex-col sm:flex-row gap-4 justify-center"
+            >
+              <Link
+                to="/courses"
+                className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+              >
+                Explore Courses
+              </Link>
+              <Link
+                to="/signup"
+                className="px-8 py-4 bg-white text-purple-600 rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 border-2 border-purple-600"
+              >
+                Get Started Free
+              </Link>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-20 bg-white/50 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {stats.map((stat, index) => (
               <motion.div
                 key={index}
-                whileHover={{ y: -5 }}
-                className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10 text-center"
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1, duration: 0.5 }}
+                className="text-center"
               >
-                <stat.icon className="w-10 h-10 text-purple-400 mx-auto mb-3" />
-                <div className="text-3xl font-bold text-white mb-1">{stat.value}</div>
-                <div className="text-gray-400 text-sm">{stat.label}</div>
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-500 rounded-2xl mb-4">
+                  <stat.icon className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-4xl font-bold text-gray-900 mb-2">{stat.value}</h3>
+                <p className="text-gray-600">{stat.label}</p>
               </motion.div>
             ))}
-          </motion.div>
+          </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-20 px-4 relative">
-        <div className="container mx-auto max-w-7xl">
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-              Why Choose Us?
+      <section className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              Why Choose Our Platform?
             </h2>
-            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-              Experience the future of online learning with our cutting-edge platform
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              We provide everything you need to succeed in your learning journey
             </p>
-          </motion.div>
+          </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                icon: BookOpen,
-                title: 'Expert-Led Courses',
-                description: 'Learn from industry professionals with years of experience',
-                gradient: 'from-purple-500 to-pink-500'
-              },
-              {
-                icon: Award,
-                title: 'Certified Learning',
-                description: 'Earn certificates recognized by top companies worldwide',
-                gradient: 'from-blue-500 to-cyan-500'
-              },
-              {
-                icon: Users,
-                title: 'Community Support',
-                description: 'Join a thriving community of learners and mentors',
-                gradient: 'from-orange-500 to-red-500'
-              },
-            ].map((feature, index) => (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {features.map((feature, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.2 }}
-                whileHover={{ y: -10 }}
-                className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 relative overflow-hidden group"
+                transition={{ delay: index * 0.1, duration: 0.5 }}
+                className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-shadow duration-300 border border-gray-100"
               >
-                <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-10 transition-opacity`}></div>
-                <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-6`}>
-                  <feature.icon className="w-8 h-8 text-white" />
+                <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-purple-100 to-blue-100 rounded-xl mb-4">
+                  <feature.icon className="w-7 h-7 text-purple-600" />
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-4">{feature.title}</h3>
-                <p className="text-gray-400">{feature.description}</p>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">
+                  {feature.title}
+                </h3>
+                <p className="text-gray-600">
+                  {feature.description}
+                </p>
               </motion.div>
             ))}
           </div>
@@ -140,103 +232,27 @@ const Home = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 relative">
-        <div className="container mx-auto max-w-4xl">
+      <section className="py-20 bg-gradient-to-r from-purple-600 to-blue-600">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-3xl p-12 text-center relative overflow-hidden"
+            transition={{ duration: 0.8 }}
           >
-            <div className="absolute inset-0 bg-black/20"></div>
-            <div className="relative z-10">
-              <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-                Start Your Learning Journey Today
-              </h2>
-              <p className="text-xl text-white/90 mb-8">
-                Join thousands of students already learning on our platform
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link to="/signup">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="px-8 py-4 bg-white text-purple-600 rounded-full font-semibold text-lg shadow-xl"
-                  >
-                    Sign Up Now
-                  </motion.button>
-                </Link>
-                <Link to="/login">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="px-8 py-4 bg-white/10 backdrop-blur-sm text-white rounded-full font-semibold text-lg border-2 border-white"
-                  >
-                    Sign In
-                  </motion.button>
-                </Link>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="py-20 px-4">
-        <div className="container mx-auto max-w-7xl">
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-              What Our Students Say
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+              Ready to Start Learning?
             </h2>
+            <p className="text-xl text-purple-100 mb-10 max-w-2xl mx-auto">
+              Join our community today and get access to hundreds of courses taught by industry experts
+            </p>
+            <Link
+              to="/signup"
+              className="inline-block px-8 py-4 bg-white text-purple-600 rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+            >
+              Sign Up Now
+            </Link>
           </motion.div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                name: 'Sarah Johnson',
-                role: 'Web Developer',
-                comment: 'This platform transformed my career. The courses are practical and easy to follow.',
-                rating: 5
-              },
-              {
-                name: 'Mike Chen',
-                role: 'Data Scientist',
-                comment: 'Amazing instructors and great community support. Highly recommended!',
-                rating: 5
-              },
-              {
-                name: 'Emily Davis',
-                role: 'UX Designer',
-                comment: 'The best investment in my professional development. Worth every penny!',
-                rating: 5
-              },
-            ].map((testimonial, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.2 }}
-                className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10"
-              >
-                <div className="flex gap-1 mb-4">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                  ))}
-                </div>
-                <p className="text-gray-300 mb-6 italic">"{testimonial.comment}"</p>
-                <div>
-                  <div className="font-semibold text-white">{testimonial.name}</div>
-                  <div className="text-sm text-gray-400">{testimonial.role}</div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
         </div>
       </section>
     </div>
