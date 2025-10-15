@@ -1,181 +1,60 @@
-import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
-import Hero from './components/Hero';
-import FeaturedCourses from './components/FeaturedCourses';
-import Categories from './components/Categories';
-import Testimonials from './components/Testimonials';
-import Footer from './components/Footer';
+import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
-import Dashboard from './pages/Dashboard';
-import Courses from './pages/Courses';
-import CourseDetail from './pages/CourseDetail';
-import Profile from './pages/Profile';
-import MyCourses from './pages/MyCourses';
-import InstructorCourses from './pages/InstructorCourses';
-import CreateCourse from './pages/CreateCourse';
-import EditCourse from './pages/EditCourse';
-import AdminDashboard from './pages/AdminDashboard';
-import useAuthStore from './store/useAuthStore';
+import useAuthStore from './store/authStore';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuthStore();
-  return isAuthenticated ? children : <Navigate to="/login" replace />;
+  return isAuthenticated ? children : <Navigate to="/login" />;
 };
 
-// Role-based Protected Route
-const RoleProtectedRoute = ({ children, allowedRoles }) => {
-  const { isAuthenticated, user } = useAuthStore();
-  
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  if (allowedRoles && !allowedRoles.includes(user?.role)) {
-    return <Navigate to="/dashboard" replace />;
-  }
-  
-  return children;
-};
-
-// Home Page Component
-const HomePage = ({ darkMode, setDarkMode }) => {
-  return (
-    <>
-      <Navbar darkMode={darkMode} setDarkMode={setDarkMode} />
-      <Hero />
-      <FeaturedCourses />
-      <Categories />
-      <Testimonials />
-      <Footer />
-    </>
-  );
-};
-
-function App() {
-  const [darkMode, setDarkMode] = useState(false);
-  const { initializeAuth } = useAuthStore();
+const App = () => {
+  const { isAuthenticated, getMe } = useAuthStore();
 
   useEffect(() => {
-    // Initialize auth from localStorage on app load
-    initializeAuth();
-  }, [initializeAuth]);
+    if (isAuthenticated) {
+      getMe();
+    }
+  }, [isAuthenticated, getMe]);
 
   return (
-    <Router>
-      <div className={darkMode ? 'dark' : ''}>
-        <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
+    <BrowserRouter>
+      <div className="min-h-screen bg-slate-900">
+        <Navbar />
+        <div className="pt-16">
           <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<HomePage darkMode={darkMode} setDarkMode={setDarkMode} />} />
+            <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            
+            {/* Protected Routes - We'll add these next */}
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <div className="min-h-screen flex items-center justify-center text-white">
+                    <h1 className="text-4xl">Dashboard - Coming Soon</h1>
+                  </div>
+                </ProtectedRoute>
+              } 
+            />
             <Route 
               path="/courses" 
               element={
-                <>
-                  <Navbar darkMode={darkMode} setDarkMode={setDarkMode} />
-                  <Courses />
-                  <Footer />
-                </>
+                <div className="min-h-screen flex items-center justify-center text-white">
+                  <h1 className="text-4xl">Courses - Coming Soon</h1>
+                </div>
               } 
             />
-            <Route 
-              path="/courses/:id" 
-              element={
-                <>
-                  <Navbar darkMode={darkMode} setDarkMode={setDarkMode} />
-                  <CourseDetail />
-                  <Footer />
-                </>
-              } 
-            />
-
-            {/* Protected Student Routes */}
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Navbar darkMode={darkMode} setDarkMode={setDarkMode} />
-                  <Dashboard />
-                  <Footer />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <Navbar darkMode={darkMode} setDarkMode={setDarkMode} />
-                  <Profile />
-                  <Footer />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/my-courses"
-              element={
-                <ProtectedRoute>
-                  <Navbar darkMode={darkMode} setDarkMode={setDarkMode} />
-                  <MyCourses />
-                  <Footer />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Instructor Routes */}
-            <Route
-              path="/instructor/courses"
-              element={
-                <RoleProtectedRoute allowedRoles={['instructor', 'admin']}>
-                  <Navbar darkMode={darkMode} setDarkMode={setDarkMode} />
-                  <InstructorCourses />
-                  <Footer />
-                </RoleProtectedRoute>
-              }
-            />
-            <Route
-              path="/instructor/courses/create"
-              element={
-                <RoleProtectedRoute allowedRoles={['instructor', 'admin']}>
-                  <Navbar darkMode={darkMode} setDarkMode={setDarkMode} />
-                  <CreateCourse />
-                  <Footer />
-                </RoleProtectedRoute>
-              }
-            />
-            <Route
-              path="/instructor/courses/edit/:id"
-              element={
-                <RoleProtectedRoute allowedRoles={['instructor', 'admin']}>
-                  <Navbar darkMode={darkMode} setDarkMode={setDarkMode} />
-                  <EditCourse />
-                  <Footer />
-                </RoleProtectedRoute>
-              }
-            />
-
-            {/* Admin Routes */}
-            <Route
-              path="/admin"
-              element={
-                <RoleProtectedRoute allowedRoles={['admin']}>
-                  <Navbar darkMode={darkMode} setDarkMode={setDarkMode} />
-                  <AdminDashboard />
-                  <Footer />
-                </RoleProtectedRoute>
-              }
-            />
-
-            {/* Catch all - redirect to home */}
-            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
       </div>
-    </Router>
+    </BrowserRouter>
   );
-}
+};
 
 export default App;
