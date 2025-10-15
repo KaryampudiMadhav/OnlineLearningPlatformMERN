@@ -1,131 +1,146 @@
-/* eslint-disable no-unused-vars */
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { FiSun, FiMoon, FiMenu, FiX } from 'react-icons/fi';
+﻿import { useState } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { FiSun, FiMoon, FiMenu, FiX, FiUser, FiLogOut } from 'react-icons/fi';
+import useAuthStore from '../store/useAuthStore';
 
 const Navbar = ({ darkMode, setDarkMode }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { isAuthenticated, user, logout } = useAuthStore();
 
   const navLinks = [
-    { name: 'Home', href: '#home' },
-    { name: 'Courses', href: '#courses' },
-    { name: 'Categories', href: '#categories' },
-    { name: 'Testimonials', href: '#testimonials' }
+    { name: 'Home', href: '/', isRoute: true },
+    { name: 'Courses', href: '/courses', isRoute: true },
+    { name: 'About', href: '#about', isRoute: false },
   ];
 
-  const handleNavClick = (e, href) => {
+  const handleNavClick = (e, link) => {
     e.preventDefault();
     setIsOpen(false);
-    const element = document.querySelector(href);
-    if (element) {
-      const offset = 80;
-      const elementPosition = element.offsetTop - offset;
-      window.scrollTo({
-        top: elementPosition,
-        behavior: 'smooth'
-      });
+    
+    if (link.isRoute) {
+      navigate(link.href);
+    } else if (location.pathname === '/') {
+      const element = document.querySelector(link.href);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else {
+      navigate('/');
     }
   };
 
+  const handleLogout = async () => {
+    await logout();
+    setShowUserMenu(false);
+    navigate('/');
+  };
+
   return (
-    <nav className="fixed w-full top-0 z-50 bg-gray-900/95 backdrop-blur-lg shadow-lg border-b border-gray-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-20">
-          {/* Logo */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex items-center cursor-pointer"
-            onClick={(e) => handleNavClick(e, '#home')}
-          >
-            <span className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-              StudySphere
-            </span>
-          </motion.div>
+    <nav className='fixed w-full top-0 z-50 bg-gray-900/95 backdrop-blur-lg shadow-lg border-b border-gray-800'>
+      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+        <div className='flex justify-between items-center h-20'>
+          <Link to='/' className='text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent'>
+            StudySphere
+          </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-10">
-            {navLinks.map((link, index) => (
-              <motion.a
-                key={link.name}
-                href={link.href}
-                onClick={(e) => handleNavClick(e, link.href)}
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="text-base font-medium text-gray-300 hover:text-white transition-colors duration-300 cursor-pointer whitespace-nowrap px-2"
-              >
-                {link.name}
-              </motion.a>
-            ))}
-          </div>
-
-          {/* Right Side Actions */}
-          <div className="flex items-center space-x-5">
-            {/* Dark Mode Toggle */}
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setDarkMode(!darkMode)}
-              className="p-2.5 rounded-full hover:bg-gray-800 transition-colors duration-300"
-              aria-label="Toggle dark mode"
-            >
-              {darkMode ? (
-                <FiSun className="text-yellow-400 text-xl" />
-              ) : (
-                <FiMoon className="text-gray-300 text-xl" />
-              )}
-            </motion.button>
-
-            {/* Login/Signup Button - Desktop */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="hidden md:block px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full font-semibold hover:shadow-lg hover:shadow-blue-500/50 transition-all duration-300"
-              onClick={() => alert('Login/Signup functionality coming soon!')}
-            >
-              Login / Signup
-            </motion.button>
-
-            {/* Mobile Menu Toggle */}
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="md:hidden p-2 rounded-lg hover:bg-gray-800 transition-colors"
-              aria-label="Toggle menu"
-            >
-              {isOpen ? (
-                <FiX className="text-2xl text-gray-300" />
-              ) : (
-                <FiMenu className="text-2xl text-gray-300" />
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Menu */}
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden pb-4"
-          >
+          <div className='hidden md:flex items-center gap-10'>
             {navLinks.map((link) => (
               <a
                 key={link.name}
                 href={link.href}
-                onClick={(e) => handleNavClick(e, link.href)}
-                className="block py-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+                onClick={(e) => handleNavClick(e, link)}
+                className='text-base font-medium text-gray-300 hover:text-white transition-colors cursor-pointer'
               >
                 {link.name}
               </a>
             ))}
-            <button 
-              className="mt-4 w-full px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full font-medium"
-              onClick={() => alert('Login/Signup functionality coming soon!')}
+          </div>
+
+          <div className='flex items-center space-x-5'>
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              className='p-2.5 rounded-full hover:bg-gray-800 transition-colors'
             >
-              Login / Signup
+              {darkMode ? <FiSun className='text-yellow-400 text-xl' /> : <FiMoon className='text-gray-300 text-xl' />}
             </button>
-          </motion.div>
+
+            {isAuthenticated ? (
+              <div className='hidden md:block relative'>
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className='flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full font-semibold'
+                >
+                  <FiUser />
+                  <span>{user?.name}</span>
+                </button>
+                
+                {showUserMenu && (
+                  <div className='absolute right-0 mt-2 w-56 bg-gray-800 rounded-2xl shadow-xl border-2 border-gray-700 overflow-hidden'>
+                    <Link to='/dashboard' onClick={() => setShowUserMenu(false)} className='flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors'>
+                      Dashboard
+                    </Link>
+                    <Link to='/my-courses' onClick={() => setShowUserMenu(false)} className='flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors'>
+                      My Courses
+                    </Link>
+                    <Link to='/profile' onClick={() => setShowUserMenu(false)} className='flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors'>
+                      Profile
+                    </Link>
+                    {(user?.role === 'instructor' || user?.role === 'admin') && (
+                      <Link to='/instructor/courses' onClick={() => setShowUserMenu(false)} className='flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors border-t border-gray-700'>
+                        Manage Courses
+                      </Link>
+                    )}
+                    {user?.role === 'admin' && (
+                      <Link to='/admin' onClick={() => setShowUserMenu(false)} className='flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors'>
+                        Admin Panel
+                      </Link>
+                    )}
+                    <button onClick={handleLogout} className='flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors w-full text-left border-t border-gray-700'>
+                      <FiLogOut />
+                      <span>Logout</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link to='/login' className='hidden md:block px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full font-semibold'>
+                Login
+              </Link>
+            )}
+
+            <button onClick={() => setIsOpen(!isOpen)} className='md:hidden p-2 rounded-lg hover:bg-gray-800'>
+              {isOpen ? <FiX className='text-2xl text-gray-300' /> : <FiMenu className='text-2xl text-gray-300' />}
+            </button>
+          </div>
+        </div>
+
+        {isOpen && (
+          <div className='md:hidden pb-4'>
+            {navLinks.map((link) => (
+              <a key={link.name} href={link.href} onClick={(e) => handleNavClick(e, link)} className='block py-2 text-gray-300 hover:text-white transition-colors cursor-pointer'>
+                {link.name}
+              </a>
+            ))}
+            {isAuthenticated ? (
+              <>
+                <Link to='/dashboard' onClick={() => setIsOpen(false)} className='block py-2 text-gray-300 hover:text-white'>Dashboard</Link>
+                <Link to='/my-courses' onClick={() => setIsOpen(false)} className='block py-2 text-gray-300 hover:text-white'>My Courses</Link>
+                <Link to='/profile' onClick={() => setIsOpen(false)} className='block py-2 text-gray-300 hover:text-white'>Profile</Link>
+                {(user?.role === 'instructor' || user?.role === 'admin') && (
+                  <Link to='/instructor/courses' onClick={() => setIsOpen(false)} className='block py-2 text-gray-300 hover:text-white'>Manage Courses</Link>
+                )}
+                {user?.role === 'admin' && (
+                  <Link to='/admin' onClick={() => setIsOpen(false)} className='block py-2 text-gray-300 hover:text-white'>Admin Panel</Link>
+                )}
+                <button onClick={handleLogout} className='mt-4 w-full px-6 py-2 bg-red-600 text-white rounded-full'>Logout</button>
+              </>
+            ) : (
+              <Link to='/login' onClick={() => setIsOpen(false)} className='mt-4 block w-full px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full text-center'>Login</Link>
+            )}
+          </div>
         )}
       </div>
     </nav>
@@ -133,5 +148,3 @@ const Navbar = ({ darkMode, setDarkMode }) => {
 };
 
 export default Navbar;
-
-

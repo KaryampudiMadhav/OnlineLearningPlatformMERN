@@ -1,20 +1,35 @@
 {
-  "name": "elearningplatform",
+  "name": "studysphere-backend",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Backend API for StudySphere Online Learning Platform",
+  "main": "backend/index.js",
   "scripts": {
+    "start": "node backend/index.js",
+    "dev": "nodemon backend/index.js",
+    "seed": "node backend/scripts/seed.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
+  "keywords": [
+    "elearning",
+    "education",
+    "courses",
+    "api",
+    "mongodb",
+    "express",
+    "nodejs"
+  ],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.19.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
   }
 }
