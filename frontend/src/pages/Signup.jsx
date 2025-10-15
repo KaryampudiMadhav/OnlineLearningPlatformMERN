@@ -27,7 +27,15 @@ const Signup = () => {
     const result = await signup(formData.name, formData.email, formData.password, formData.role);
     
     if (result.success) {
-      navigate('/dashboard');
+      // Navigate based on user role from backend
+      const userRole = result.user?.role || 'student';
+      if (userRole === 'admin') {
+        navigate('/admin/dashboard');
+      } else if (userRole === 'instructor') {
+        navigate('/instructor/dashboard');
+      } else {
+        navigate('/dashboard');
+      }
     } else {
       setError(result.message);
     }
@@ -137,7 +145,7 @@ const Signup = () => {
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 I want to
               </label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, role: 'student' })}
@@ -159,6 +167,17 @@ const Signup = () => {
                   }`}
                 >
                   Teach
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, role: 'admin' })}
+                  className={`py-3 px-4 rounded-xl font-medium transition-all ${
+                    formData.role === 'admin'
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
+                  }`}
+                >
+                  Manage
                 </button>
               </div>
             </div>

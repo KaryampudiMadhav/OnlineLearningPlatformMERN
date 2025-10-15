@@ -121,6 +121,7 @@ exports.getAllUsers = async (req, res, next) => {
       total,
       totalPages: Math.ceil(total / limit),
       currentPage: Number(page),
+      users: users,
       data: users,
     });
   } catch (error) {
@@ -213,3 +214,27 @@ exports.deleteUser = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Get user statistics (Admin only)
+// @route   GET /api/users/admin/stats
+// @access  Private (Admin)
+exports.getUserStats = async (req, res, next) => {
+  try {
+    const totalUsers = await User.countDocuments();
+    const roleCounts = await User.aggregate([
+      { $group: { _id: '$role', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        totalUsers,
+        roleCounts,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+

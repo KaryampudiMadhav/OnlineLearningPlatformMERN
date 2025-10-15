@@ -62,6 +62,7 @@ exports.getCourses = async (req, res, next) => {
       total,
       totalPages: Math.ceil(total / limit),
       currentPage: Number(page),
+      courses: courses,
       data: courses,
     });
   } catch (error) {

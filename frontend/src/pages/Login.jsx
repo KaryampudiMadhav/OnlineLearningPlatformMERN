@@ -24,8 +24,20 @@ const Login = () => {
 
     const result = await login(formData.email, formData.password);
     
+    console.log('Login result:', result);
+    
     if (result.success) {
-      navigate('/dashboard');
+      // Navigate based on user role from backend
+      const userRole = result.user?.role || 'student';
+      console.log('Navigating to dashboard for role:', userRole);
+      
+      if (userRole === 'admin') {
+        navigate('/admin/dashboard');
+      } else if (userRole === 'instructor') {
+        navigate('/instructor/dashboard');
+      } else {
+        navigate('/dashboard');
+      }
     } else {
       setError(result.message);
     }

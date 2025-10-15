@@ -75,7 +75,7 @@ exports.getMyEnrollments = async (req, res, next) => {
     res.status(200).json({
       success: true,
       count: enrollments.length,
-      data: enrollments,
+      enrollments: enrollments,
     });
   } catch (error) {
     next(error);
