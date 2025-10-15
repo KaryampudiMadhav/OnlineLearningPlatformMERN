@@ -1,5 +1,6 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   Users, BookOpen, TrendingUp, DollarSign, 
@@ -24,15 +25,25 @@ const AdminDashboard = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const [statsRes, usersRes, coursesRes] = await Promise.all([
+      const [courseStatsRes, userStatsRes, usersRes, coursesRes] = await Promise.all([
         api.get('/courses/admin/stats'),
+        api.get('/users/admin/stats'),
         api.get('/users'),
         api.get('/courses')
       ]);
 
-      setStats(statsRes.data.stats || {});
-      setUsers(usersRes.data.users || []);
-      setCourses(coursesRes.data.courses || []);
+      const courseStats = courseStatsRes.data.data || {};
+      const userStats = userStatsRes.data.data || {};
+      
+      setStats({
+        totalUsers: userStats.totalUsers || 0,
+        totalCourses: courseStats.totalCourses || 0,
+        totalEnrollments: courseStats.totalEnrollments || 0,
+        totalRevenue: 0 // Calculate from enrollments if needed
+      });
+      
+      setUsers(usersRes.data.users || usersRes.data.data || []);
+      setCourses(coursesRes.data.courses || coursesRes.data.data || []);
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
     } finally {
@@ -115,12 +126,23 @@ const AdminDashboard = () => {
           animate={{ opacity: 1, y: 0 }}
           className="mb-12"
         >
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            Admin <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Dashboard</span> 🛡️
-          </h1>
-          <p className="text-xl text-gray-300">
-            Welcome back, {user?.name}! Manage your platform efficiently
-          </p>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+                Admin <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Dashboard</span> 🛡️
+              </h1>
+              <p className="text-xl text-gray-300">
+                Welcome back, {user?.name}! Manage your platform efficiently
+              </p>
+            </div>
+            <Link
+              to="/admin/courses"
+              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all flex items-center gap-2"
+            >
+              <BookOpen className="w-5 h-5" />
+              Manage Courses
+            </Link>
+          </div>
         </motion.div>
 
         {/* Stats Grid */}

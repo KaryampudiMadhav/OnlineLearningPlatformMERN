@@ -1,10 +1,27 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { BookOpen, Users, Award, TrendingUp, Video, MessageSquare } from 'lucide-react';
+import useAuthStore from '../store/authStore';
 
 const Home = () => {
+  const { isAuthenticated, user } = useAuthStore();
+  const navigate = useNavigate();
+
+  // Redirect logged-in users to their dashboard
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      if (user.role === 'admin') {
+        navigate('/admin/dashboard');
+      } else if (user.role === 'instructor') {
+        navigate('/instructor/dashboard');
+      } else {
+        navigate('/dashboard');
+      }
+    }
+  }, [isAuthenticated, user, navigate]);
+
   const educationQuotes = [
     { text: "Education is the most powerful weapon which you can use to change the world.", author: "Nelson Mandela" },
     { text: "The beautiful thing about learning is that no one can take it away from you.", author: "B.B. King" },

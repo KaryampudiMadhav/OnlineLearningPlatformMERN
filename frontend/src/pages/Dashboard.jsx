@@ -157,63 +157,83 @@ const CourseCard = ({ enrollment, index }) => {
       whileHover={{ y: -8 }}
       className="group"
     >
-      <Link to={`/courses/${course._id}`}>
-        <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl overflow-hidden hover:border-purple-500/50 transition-all">
-          {/* Course Image */}
-          <div className="relative h-40 overflow-hidden bg-gradient-to-br from-purple-500/20 to-pink-500/20">
-            {course.thumbnail ? (
-              <img
-                src={course.thumbnail}
-                alt={course.title}
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+      <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl overflow-hidden hover:border-purple-500/50 transition-all">
+        {/* Course Image */}
+        <div className="relative h-40 overflow-hidden bg-gradient-to-br from-purple-500/20 to-pink-500/20">
+          {course.thumbnail ? (
+            <img
+              src={course.thumbnail}
+              alt={course.title}
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <BookOpen className="w-16 h-16 text-white/30" />
+            </div>
+          )}
+          
+          {/* Progress Badge */}
+          {enrollment.progress === 100 && (
+            <div className="absolute top-3 right-3 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
+              <Award className="w-3 h-3" />
+              Completed
+            </div>
+          )}
+        </div>
+
+        {/* Course Info */}
+        <div className="p-6">
+          <div className="text-purple-400 text-sm font-semibold mb-2">
+            {course.category}
+          </div>
+          
+          <h3 className="text-lg font-bold text-white mb-3 line-clamp-2">
+            {course.title}
+          </h3>
+
+          {/* Progress Bar */}
+          <div className="mb-4">
+            <div className="flex justify-between text-sm mb-2">
+              <span className="text-gray-400">Progress</span>
+              <span className="text-white font-semibold">{enrollment.progress || 0}%</span>
+            </div>
+            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${enrollment.progress || 0}%` }}
+                transition={{ duration: 1, delay: index * 0.1 }}
+                className="h-full bg-gradient-to-r from-purple-500 to-pink-500"
               />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <BookOpen className="w-16 h-16 text-white/30" />
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="flex items-center justify-between text-sm text-gray-400 mb-4">
+            <div className="flex items-center gap-1">
+              <Clock className="w-4 h-4" />
+              <span>{course.duration || 0}h</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+              <span>{course.rating || 'N/A'}</span>
+            </div>
+            {enrollment.completedLessons && (
+              <div className="flex items-center gap-1">
+                <BookOpen className="w-4 h-4" />
+                <span>{enrollment.completedLessons.length || 0} lessons</span>
               </div>
             )}
           </div>
 
-          {/* Course Info */}
-          <div className="p-6">
-            <div className="text-purple-400 text-sm font-semibold mb-2">
-              {course.category}
-            </div>
-            
-            <h3 className="text-lg font-bold text-white mb-3 line-clamp-2 group-hover:text-purple-400 transition-colors">
-              {course.title}
-            </h3>
-
-            {/* Progress Bar */}
-            <div className="mb-4">
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-gray-400">Progress</span>
-                <span className="text-white font-semibold">{enrollment.progress || 0}%</span>
-              </div>
-              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${enrollment.progress || 0}%` }}
-                  transition={{ duration: 1, delay: index * 0.1 }}
-                  className="h-full bg-gradient-to-r from-purple-500 to-pink-500"
-                />
-              </div>
-            </div>
-
-            {/* Stats */}
-            <div className="flex items-center justify-between text-sm text-gray-400">
-              <div className="flex items-center gap-1">
-                <Clock className="w-4 h-4" />
-                <span>{course.duration || 0}h</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                <span>{course.rating || 'N/A'}</span>
-              </div>
-            </div>
-          </div>
+          {/* Action Button */}
+          <Link
+            to={`/learn/${course._id}`}
+            className="block w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-center rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all"
+          >
+            {enrollment.progress === 0 ? 'Start Learning' : enrollment.progress === 100 ? 'Review Course' : 'Continue Learning'}
+          </Link>
         </div>
-      </Link>
+      </div>
     </motion.div>
   );
 };

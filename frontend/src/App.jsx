@@ -6,9 +6,11 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Courses from './pages/Courses';
 import CourseDetail from './pages/CourseDetail';
+import CourseLearning from './pages/CourseLearning';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminCourses from './pages/AdminCourses';
 import InstructorDashboard from './pages/InstructorDashboard';
 import CreateCourse from './pages/CreateCourse';
 import EditCourse from './pages/EditCourse';
@@ -50,6 +52,16 @@ const App = () => {
             <Route path="/signup" element={<Signup />} />
             <Route path="/courses" element={<Courses />} />
             <Route path="/courses/:id" element={<CourseDetail />} />
+            
+            {/* Course Learning */}
+            <Route 
+              path="/learn/:id" 
+              element={
+                <ProtectedRoute>
+                  <CourseLearning />
+                </ProtectedRoute>
+              } 
+            />
             
             {/* Student Dashboard */}
             <Route 
@@ -103,6 +115,14 @@ const App = () => {
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/courses" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminCourses />
                 </ProtectedRoute>
               } 
             />

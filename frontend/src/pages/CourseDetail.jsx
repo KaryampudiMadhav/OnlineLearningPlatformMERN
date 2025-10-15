@@ -28,7 +28,7 @@ const CourseDetail = () => {
     try {
       setLoading(true);
       const response = await api.get(`/courses/${id}`);
-      setCourse(response.data.course);
+      setCourse(response.data.data || response.data.course);
     } catch (error) {
       console.error('Failed to fetch course:', error);
     } finally {
@@ -157,21 +157,89 @@ const CourseDetail = () => {
                 <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-8 mb-8">
                   <h2 className="text-2xl font-bold text-white mb-6">What you'll learn</h2>
                   <div className="grid md:grid-cols-2 gap-4">
-                    {[
-                      'Master core concepts and fundamentals',
-                      'Build real-world projects',
-                      'Learn industry best practices',
-                      'Get hands-on experience',
-                      'Understand advanced techniques',
-                      'Develop problem-solving skills'
-                    ].map((item, index) => (
-                      <div key={index} className="flex items-start gap-3">
-                        <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                        <span className="text-gray-300">{item}</span>
-                      </div>
-                    ))}
+                    {course.whatYouWillLearn && course.whatYouWillLearn.length > 0 ? (
+                      course.whatYouWillLearn.map((item, index) => (
+                        <div key={index} className="flex items-start gap-3">
+                          <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                          <span className="text-gray-300">{item}</span>
+                        </div>
+                      ))
+                    ) : (
+                      [
+                        'Master core concepts and fundamentals',
+                        'Build real-world projects',
+                        'Learn industry best practices',
+                        'Get hands-on experience',
+                        'Understand advanced techniques',
+                        'Develop problem-solving skills'
+                      ].map((item, index) => (
+                        <div key={index} className="flex items-start gap-3">
+                          <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                          <span className="text-gray-300">{item}</span>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
+
+                {/* Course Curriculum */}
+                {course.curriculum && course.curriculum.length > 0 && (
+                  <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-8 mb-8">
+                    <h2 className="text-2xl font-bold text-white mb-6">Course Content</h2>
+                    <div className="space-y-4">
+                      {course.curriculum.map((section, sectionIndex) => (
+                        <div key={sectionIndex} className="border border-white/10 rounded-xl overflow-hidden">
+                          <div className="bg-white/5 p-4">
+                            <h3 className="text-lg font-semibold text-white mb-1">
+                              Section {sectionIndex + 1}: {section.title}
+                            </h3>
+                            {section.description && (
+                              <p className="text-gray-400 text-sm mb-2">{section.description}</p>
+                            )}
+                            <p className="text-purple-400 text-sm">
+                              {section.lessons?.length || 0} lessons • {section.duration || 'N/A'}
+                            </p>
+                          </div>
+                          {section.lessons && section.lessons.length > 0 && (
+                            <div className="divide-y divide-white/10">
+                              {section.lessons.map((lesson, lessonIndex) => (
+                                <div key={lessonIndex} className="p-4 hover:bg-white/5 transition-colors">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                      <PlayCircle className={`w-5 h-5 ${lesson.isPreview ? 'text-green-400' : 'text-gray-400'}`} />
+                                      <div>
+                                        <p className="text-white font-medium">{lesson.title}</p>
+                                        {lesson.isPreview && (
+                                          <span className="text-xs text-green-400">Free Preview</span>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <span className="text-gray-400 text-sm">{lesson.duration || 'N/A'}</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Requirements */}
+                {course.requirements && course.requirements.length > 0 && (
+                  <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-8 mb-8">
+                    <h2 className="text-2xl font-bold text-white mb-6">Requirements</h2>
+                    <ul className="space-y-3">
+                      {course.requirements.map((req, index) => (
+                        <li key={index} className="flex items-start gap-3 text-gray-300">
+                          <span className="text-purple-400">•</span>
+                          <span>{req}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
                 {/* About Instructor */}
                 <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-8">

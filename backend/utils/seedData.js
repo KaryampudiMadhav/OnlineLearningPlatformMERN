@@ -433,7 +433,7 @@ const seedDatabase = async () => {
   try {
     // Clear existing courses
     await Course.deleteMany({});
-    console.log('🗑️  Existing courses cleared');
+    console.log('🗑️  Cleared existing courses');
 
     // Insert seed courses
     const courses = await Course.insertMany(seedCourses);

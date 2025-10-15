@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-const connectDB = require('../config/database');
 const seedDatabase = require('../utils/seedData');
 const User = require('../models/User');
 
@@ -10,7 +9,8 @@ dotenv.config();
 const seedAll = async () => {
   try {
     // Connect to MongoDB
-    await connectDB();
+    await mongoose.connect(process.env.MONGODB_URI)
+    console.log('✅ MongoDB Connected');
 
     console.log('\n🌱 Starting database seeding...\n');
 

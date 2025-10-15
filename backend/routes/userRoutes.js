@@ -8,6 +8,7 @@ const {
   getUser,
   updateUser,
   deleteUser,
+  getUserStats,
 } = require('../controllers/userController');
 const { protect, authorize } = require('../middlewares/auth');
 
@@ -17,8 +18,10 @@ router.put('/profile', protect, updateProfile);
 router.put('/change-password', protect, changePassword);
 
 // Admin routes
+router.get('/admin/stats', protect, authorize('admin'), getUserStats);
 router.get('/', protect, authorize('admin'), getAllUsers);
 router.get('/:id', protect, authorize('admin'), getUser);
+router.put('/:id/role', protect, authorize('admin'), updateUser);
 router.put('/:id', protect, authorize('admin'), updateUser);
 router.delete('/:id', protect, authorize('admin'), deleteUser);
 
