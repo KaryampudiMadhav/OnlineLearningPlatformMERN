@@ -1,0 +1,61 @@
+const mongoose = require('mongoose');
+
+const certificateSchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
+  course: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Course',
+    required: true,
+  },
+  certificateId: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  issueDate: {
+    type: Date,
+    default: Date.now,
+  },
+  completionDate: {
+    type: Date,
+    required: true,
+  },
+  grade: {
+    type: String,
+    enum: ['A+', 'A', 'B+', 'B', 'C+', 'C', 'Pass'],
+    default: 'Pass',
+  },
+  verificationUrl: {
+    type: String,
+  },
+  metadata: {
+    courseDuration: String,
+    totalLessons: Number,
+    completedLessons: Number,
+    instructorName: String,
+  },
+}, {
+  timestamps: true,
+});
+
+// Index for faster lookups
+certificateSchema.index({ user: 1, course: 1 });
+certificateSchema.index({ certificateId: 1 });
+
+// Generate unique certificate ID
+certificateSchema.pre('save', async function(next) {
+  if (this.isNew) {
+    const timestamp = Date.now().toString(36).toUpperCase();
+    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+    this.certificateId = `CERT-${timestamp}-${random}`;
+  }
+  next();
+});
+
+const Certificate = mongoose.model('Certificate', certificateSchema);
+
+module.exports = Certificate;

@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, BookOpen, LogOut, User, LayoutDashboard } from 'lucide-react';
+import { Menu, X, BookOpen, LogOut, User, LayoutDashboard, Award } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 
 const Navbar = () => {
@@ -10,10 +10,19 @@ const Navbar = () => {
   const location = useLocation();
   const { isAuthenticated, user, logout } = useAuthStore();
 
-  const navLinks = [
-    { name: 'Home', path: '/' },
-    { name: 'Courses', path: '/courses' },
-  ];
+  // Dynamic nav links based on authentication status
+  const navLinks = isAuthenticated 
+    ? [
+        { name: 'Courses', path: '/courses' },
+        { name: 'Leaderboard', path: '/leaderboard' },
+        { name: 'Challenges', path: '/challenges' },
+      ]
+    : [
+        { name: 'Home', path: '/' },
+        { name: 'Courses', path: '/courses' },
+        { name: 'Leaderboard', path: '/leaderboard' },
+        { name: 'Challenges', path: '/challenges' },
+      ];
 
   const isActive = (path) => location.pathname === path;
 
@@ -73,6 +82,30 @@ const Navbar = () => {
                     Dashboard
                   </motion.button>
                 </Link>
+                {user?.role === 'student' && (
+                  <>
+                    <Link to="/my-certificates">
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="flex items-center gap-2 px-4 py-2 text-white hover:text-purple-400 transition-colors"
+                      >
+                        <Award className="w-4 h-4" />
+                        Certificates
+                      </motion.button>
+                    </Link>
+                    <Link to="/gamification">
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="flex items-center gap-2 px-4 py-2 text-white hover:text-purple-400 transition-colors"
+                      >
+                        <Award className="w-4 h-4" />
+                        Achievements
+                      </motion.button>
+                    </Link>
+                  </>
+                )}
                 <div className="flex items-center gap-3 px-4 py-2 bg-white/5 rounded-full border border-white/10">
                   <User className="w-4 h-4 text-purple-400" />
                   <span className="text-sm text-white">{user?.name}</span>
@@ -160,6 +193,24 @@ const Navbar = () => {
                   >
                     Dashboard
                   </Link>
+                  {user?.role === 'student' && (
+                    <>
+                      <Link
+                        to="/my-certificates"
+                        onClick={() => setIsOpen(false)}
+                        className="block px-4 py-2 rounded-lg text-gray-400 hover:bg-white/5 hover:text-white transition-colors"
+                      >
+                        My Certificates
+                      </Link>
+                      <Link
+                        to="/gamification"
+                        onClick={() => setIsOpen(false)}
+                        className="block px-4 py-2 rounded-lg text-gray-400 hover:bg-white/5 hover:text-white transition-colors"
+                      >
+                        Achievements
+                      </Link>
+                    </>
+                  )}
                   <div className="px-4 py-2 bg-white/5 rounded-lg border border-white/10">
                     <div className="flex items-center gap-2 text-white">
                       <User className="w-4 h-4 text-purple-400" />

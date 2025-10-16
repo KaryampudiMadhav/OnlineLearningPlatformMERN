@@ -40,6 +40,12 @@ app.get('/', (req, res) => {
       users: '/api/users',
       courses: '/api/courses',
       enrollments: '/api/enrollments',
+      certificates: '/api/certificates',
+      quizzes: '/api/quizzes',
+      reviews: '/api/reviews',
+      gamification: '/api/gamification',
+      challenges: '/api/challenges',
+      contentGeneration: '/api/content-generation',
     },
   });
 });
@@ -49,6 +55,12 @@ app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/courses', require('./routes/courseRoutes'));
 app.use('/api/enrollments', require('./routes/enrollmentRoutes'));
+app.use('/api/certificates', require('./routes/certificateRoutes'));
+app.use('/api/quizzes', require('./routes/quizRoutes'));
+app.use('/api/reviews', require('./routes/reviewRoutes'));
+app.use('/api/gamification', require('./routes/gamificationRoutes'));
+app.use('/api/challenges', require('./routes/challengeRoutes'));
+app.use('/api/content-generation', require('./routes/contentGenerationRoutes'));
 
 // Error handling
 app.use(notFound);

@@ -9,6 +9,16 @@ import CourseDetail from './pages/CourseDetail';
 import CourseLearning from './pages/CourseLearning';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
+import MyCertificates from './pages/MyCertificates';
+import VerifyCertificate from './pages/VerifyCertificate';
+import QuizTaker from './pages/QuizTaker';
+import QuizResults from './pages/QuizResults';
+import CreateQuiz from './pages/CreateQuiz';
+import CreateModuleQuiz from './pages/CreateModuleQuiz';
+import CourseReviews from './pages/CourseReviews';
+import Leaderboard from './pages/Leaderboard';
+import GamificationDashboard from './pages/GamificationDashboard';
+import DailyChallenges from './pages/DailyChallenges';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminCourses from './pages/AdminCourses';
 import InstructorDashboard from './pages/InstructorDashboard';
@@ -16,7 +26,6 @@ import CreateCourse from './pages/CreateCourse';
 import EditCourse from './pages/EditCourse';
 import useAuthStore from './store/authStore';
 
-// Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   const { isAuthenticated, user } = useAuthStore();
   
@@ -52,6 +61,7 @@ const App = () => {
             <Route path="/signup" element={<Signup />} />
             <Route path="/courses" element={<Courses />} />
             <Route path="/courses/:id" element={<CourseDetail />} />
+            <Route path="/courses/:courseId/reviews" element={<CourseReviews />} />
             
             {/* Course Learning */}
             <Route 
@@ -83,6 +93,49 @@ const App = () => {
               } 
             />
             
+            {/* Certificates */}
+            <Route 
+              path="/my-certificates" 
+              element={
+                <ProtectedRoute>
+                  <MyCertificates />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Public Certificate Verification */}
+            <Route path="/verify-certificate/:certificateId" element={<VerifyCertificate />} />
+            
+            {/* Gamification Routes - Public but enhanced for logged-in users */}
+            <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/challenges" element={<DailyChallenges />} />
+            <Route 
+              path="/gamification" 
+              element={
+                <ProtectedRoute>
+                  <GamificationDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Quiz Routes */}
+            <Route 
+              path="/quiz/:quizId" 
+              element={
+                <ProtectedRoute>
+                  <QuizTaker />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/quiz-results/:attemptId" 
+              element={
+                <ProtectedRoute>
+                  <QuizResults />
+                </ProtectedRoute>
+              } 
+            />
+            
             {/* Instructor Routes */}
             <Route 
               path="/instructor/dashboard" 
@@ -105,6 +158,22 @@ const App = () => {
               element={
                 <ProtectedRoute allowedRoles={['instructor', 'admin']}>
                   <EditCourse />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/instructor/create-quiz/:courseId" 
+              element={
+                <ProtectedRoute allowedRoles={['instructor', 'admin']}>
+                  <CreateQuiz />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/instructor/create-module-quiz/:courseId" 
+              element={
+                <ProtectedRoute allowedRoles={['instructor', 'admin']}>
+                  <CreateModuleQuiz />
                 </ProtectedRoute>
               } 
             />

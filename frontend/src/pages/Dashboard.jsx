@@ -146,8 +146,27 @@ const Dashboard = () => {
 
 const CourseCard = ({ enrollment, index }) => {
   const course = enrollment.course;
+  const [generatingCert, setGeneratingCert] = useState(false);
+  const [certificateGenerated, setCertificateGenerated] = useState(false);
   
   if (!course) return null;
+
+  const handleGenerateCertificate = async () => {
+    try {
+      setGeneratingCert(true);
+      await api.post(`/certificates/generate/${enrollment._id}`);
+      setCertificateGenerated(true);
+      // Redirect to certificates page after a brief delay
+      setTimeout(() => {
+        window.location.href = '/my-certificates';
+      }, 1500);
+    } catch (error) {
+      console.error('Failed to generate certificate:', error);
+      alert(error.response?.data?.message || 'Failed to generate certificate');
+    } finally {
+      setGeneratingCert(false);
+    }
+  };
 
   return (
     <motion.div
@@ -225,13 +244,27 @@ const CourseCard = ({ enrollment, index }) => {
             )}
           </div>
 
-          {/* Action Button */}
-          <Link
-            to={`/learn/${course._id}`}
-            className="block w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-center rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all"
-          >
-            {enrollment.progress === 0 ? 'Start Learning' : enrollment.progress === 100 ? 'Review Course' : 'Continue Learning'}
-          </Link>
+          {/* Action Buttons */}
+          <div className="space-y-2">
+            <Link
+              to={`/learn/${course._id}`}
+              className="block w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-center rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all"
+            >
+              {enrollment.progress === 0 ? 'Start Learning' : enrollment.progress === 100 ? 'Review Course' : 'Continue Learning'}
+            </Link>
+            
+            {/* Certificate Button for Completed Courses */}
+            {enrollment.progress === 100 && (
+              <button
+                onClick={handleGenerateCertificate}
+                disabled={generatingCert || certificateGenerated}
+                className="w-full py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white text-center rounded-xl font-semibold hover:shadow-lg hover:shadow-green-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                <Award className="w-4 h-4" />
+                {generatingCert ? 'Generating...' : certificateGenerated ? 'Certificate Ready!' : 'Get Certificate'}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </motion.div>
