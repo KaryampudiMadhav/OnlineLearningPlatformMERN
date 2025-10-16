@@ -72,6 +72,17 @@ const courseSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    // Reviews & Ratings (updated by Review model)
+    averageRating: {
+      type: Number,
+      default: 0,
+      min: [0, 'Rating must be at least 0'],
+      max: [5, 'Rating cannot exceed 5'],
+    },
+    reviewCount: {
+      type: Number,
+      default: 0,
+    },
     enrolledStudents: {
       type: Number,
       default: 0,

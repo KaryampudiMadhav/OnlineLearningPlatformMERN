@@ -124,8 +124,21 @@ const CourseDetail = () => {
                 <div className="flex flex-wrap gap-6 mb-8 text-gray-300">
                   <div className="flex items-center gap-2">
                     <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-                    <span className="font-semibold">{course.rating || 'N/A'}</span>
-                    <span className="text-gray-400">({course.enrolledStudents || 0} students)</span>
+                    <span className="font-semibold">
+                      {course.averageRating > 0 ? course.averageRating.toFixed(1) : 'No ratings'}
+                    </span>
+                    {course.reviewCount > 0 && (
+                      <Link 
+                        to={`/courses/${id}/reviews`}
+                        className="text-purple-400 hover:text-purple-300 underline"
+                      >
+                        ({course.reviewCount} {course.reviewCount === 1 ? 'review' : 'reviews'})
+                      </Link>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Users className="w-5 h-5 text-green-400" />
+                    <span>{course.enrolledStudents || 0} students enrolled</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="w-5 h-5 text-purple-400" />
@@ -133,7 +146,7 @@ const CourseDetail = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <BookOpen className="w-5 h-5 text-pink-400" />
-                    <span>By {course.instructor?.name || 'Unknown'}</span>
+                    <span>By {course.instructor?.name || course.instructor || 'Unknown'}</span>
                   </div>
                 </div>
 
@@ -295,6 +308,15 @@ const CourseDetail = () => {
                       'Enroll Now'
                     )}
                   </button>
+
+                  {/* View Reviews Button */}
+                  <Link
+                    to={`/courses/${id}/reviews`}
+                    className="w-full py-3 bg-gray-800 border border-gray-700 text-white rounded-xl font-semibold hover:bg-gray-700 transition-all flex items-center justify-center gap-2"
+                  >
+                    <Star className="w-5 h-5 text-yellow-400" />
+                    View Reviews {course.reviewCount > 0 && `(${course.reviewCount})`}
+                  </Link>
 
                   {/* Course Includes */}
                   <div className="space-y-4 pt-6 border-t border-white/20">
