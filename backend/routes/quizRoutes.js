@@ -27,6 +27,7 @@ router.use(protect);
 
 // Student routes
 router.get('/my-attempts', getMyAttempts);
+router.get('/course/:courseId/module/:moduleIndex/all', getModuleQuizzes);
 router.get('/:id', getQuiz);
 router.post('/:id/start', startQuizAttempt);
 router.post('/:id/submit', submitQuizAttempt);

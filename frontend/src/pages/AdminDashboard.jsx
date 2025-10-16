@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
 import { 
   Users, BookOpen, TrendingUp, DollarSign, 
   UserCheck, UserX, Edit, Trash2, Loader2,
@@ -57,9 +58,9 @@ const AdminDashboard = () => {
     try {
       await api.delete(`/users/${userId}`);
       setUsers(users.filter(u => u._id !== userId));
-      alert('User deleted successfully');
+      toast.success('User deleted successfully');
     } catch (error) {
-      alert('Failed to delete user');
+      toast.error('Failed to delete user');
     }
   };
 

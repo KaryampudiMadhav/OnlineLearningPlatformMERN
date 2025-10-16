@@ -8,6 +8,7 @@ import {
 import { Link } from 'react-router-dom';
 import api from '../config/api';
 import useAuthStore from '../store/authStore';
+import AISupportChatbot from '../components/AISupportChatbot';
 
 const Dashboard = () => {
   const { user } = useAuthStore();
@@ -140,6 +141,9 @@ const Dashboard = () => {
           )}
         </motion.div>
       </div>
+
+      {/* AI Support Chatbot */}
+      <AISupportChatbot />
     </div>
   );
 };

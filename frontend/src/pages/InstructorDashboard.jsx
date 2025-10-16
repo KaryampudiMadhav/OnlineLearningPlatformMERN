@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { 
   BookOpen, Users, TrendingUp, DollarSign, 
   Plus, Edit, Trash2, Loader2, Star, Clock,
@@ -23,10 +24,10 @@ const InstructorDashboard = () => {
   const fetchInstructorCourses = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/courses?instructor=${user?._id}`);
+      const response = await api.get('/courses/instructor/my-courses');
       setCourses(response.data.courses || []);
     } catch (error) {
-      console.error('Failed to fetch courses:', error);
+      console.error('Failed to fetch instructor courses:', error);
       setCourses([]);
     } finally {
       setLoading(false);
@@ -39,9 +40,9 @@ const InstructorDashboard = () => {
     try {
       await api.delete(`/courses/${courseId}`);
       setCourses(courses.filter(c => c._id !== courseId));
-      alert('Course deleted successfully');
+      toast.success('Course deleted successfully');
     } catch (error) {
-      alert('Failed to delete course');
+      toast.error('Failed to delete course');
     }
   };
 
@@ -127,6 +128,57 @@ const InstructorDashboard = () => {
             </motion.div>
           ))}
         </div>
+
+        {/* Content Generation Quick Actions */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="mb-12"
+        >
+          <h3 className="text-2xl font-bold text-white mb-6">Content Creation Tools</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Link to="/instructor/content-hub">
+              <div className="bg-gradient-to-br from-blue-500/20 to-purple-500/20 backdrop-blur-lg border border-white/20 rounded-xl p-4 hover:border-blue-500/50 transition-all group">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                  <TrendingUp className="w-5 h-5 text-white" />
+                </div>
+                <h4 className="font-semibold text-white mb-1">Content Hub</h4>
+                <p className="text-gray-400 text-sm">All creation tools in one place</p>
+              </div>
+            </Link>
+            
+            <Link to="/instructor/content-hub/templates">
+              <div className="bg-gradient-to-br from-green-500/20 to-blue-500/20 backdrop-blur-lg border border-white/20 rounded-xl p-4 hover:border-green-500/50 transition-all group">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500 to-blue-500 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                  <BookOpen className="w-5 h-5 text-white" />
+                </div>
+                <h4 className="font-semibold text-white mb-1">Course Templates</h4>
+                <p className="text-gray-400 text-sm">Pre-built course structures</p>
+              </div>
+            </Link>
+            
+            <Link to="/instructor/content-hub/bulk-import">
+              <div className="bg-gradient-to-br from-orange-500/20 to-red-500/20 backdrop-blur-lg border border-white/20 rounded-xl p-4 hover:border-orange-500/50 transition-all group">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                  <BarChart3 className="w-5 h-5 text-white" />
+                </div>
+                <h4 className="font-semibold text-white mb-1">Bulk Import</h4>
+                <p className="text-gray-400 text-sm">Upload quizzes via CSV</p>
+              </div>
+            </Link>
+            
+            <Link to="/instructor/content-hub/ai-quiz">
+              <div className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-lg border border-white/20 rounded-xl p-4 hover:border-purple-500/50 transition-all group">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                  <Star className="w-5 h-5 text-white" />
+                </div>
+                <h4 className="font-semibold text-white mb-1">AI Quiz Generator</h4>
+                <p className="text-gray-400 text-sm">Auto-generate quizzes with AI</p>
+              </div>
+            </Link>
+          </div>
+        </motion.div>
 
         {/* My Courses Section */}
         <motion.div

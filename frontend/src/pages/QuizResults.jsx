@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
 import api from '../config/api';
 import {
   Award, CheckCircle, XCircle, Clock, TrendingUp,
@@ -23,7 +24,7 @@ const QuizResults = () => {
       setAttempt(response.data.attempt);
     } catch (error) {
       console.error('Error fetching results:', error);
-      alert('Failed to load quiz results');
+      toast.error('Failed to load quiz results');
       navigate('/dashboard');
     } finally {
       setLoading(false);

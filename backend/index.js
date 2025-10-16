@@ -3,9 +3,13 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./config/database');
 const { errorHandler, notFound } = require('./middlewares/errorHandler');
+const { initializeAI } = require('./utils/aiService');
 
 // Load environment variables
 dotenv.config();
+
+// Initialize AI service
+initializeAI();
 
 // Initialize Express app
 const app = express();
@@ -57,6 +61,7 @@ app.use('/api/courses', require('./routes/courseRoutes'));
 app.use('/api/enrollments', require('./routes/enrollmentRoutes'));
 app.use('/api/certificates', require('./routes/certificateRoutes'));
 app.use('/api/quizzes', require('./routes/quizRoutes'));
+app.use('/api/quiz-attempts', require('./routes/quizAttemptRoutes'));
 app.use('/api/reviews', require('./routes/reviewRoutes'));
 app.use('/api/gamification', require('./routes/gamificationRoutes'));
 app.use('/api/challenges', require('./routes/challengeRoutes'));

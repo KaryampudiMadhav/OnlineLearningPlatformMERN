@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -24,6 +25,13 @@ import AdminCourses from './pages/AdminCourses';
 import InstructorDashboard from './pages/InstructorDashboard';
 import CreateCourse from './pages/CreateCourse';
 import EditCourse from './pages/EditCourse';
+import ContentGenerationHub from './pages/ContentGenerationHub';
+import BulkImport from './pages/BulkImport';
+import CourseTemplates from './pages/CourseTemplates';
+import AIQuizGenerator from './pages/AIQuizGenerator';
+import ContentLibrary from './pages/ContentLibrary';
+import ModuleQuiz from './pages/ModuleQuiz';
+import ModuleQuizSelection from './pages/ModuleQuizSelection';
 import useAuthStore from './store/authStore';
 
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
@@ -40,15 +48,35 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   return children;
 };
 
+const DashboardRedirect = () => {
+  const { user } = useAuthStore();
+  
+  if (!user) {
+    return <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+      <div className="text-white">Loading...</div>
+    </div>;
+  }
+  
+  // Redirect based on user role
+  if (user.role === 'admin') {
+    return <Navigate to="/admin/dashboard" replace />;
+  } else if (user.role === 'instructor') {
+    return <Navigate to="/instructor/dashboard" replace />;
+  } else {
+    return <Dashboard />;
+  }
+};
+
 const App = () => {
-  const { isAuthenticated, user, getMe } = useAuthStore();
+  const { user, getMe } = useAuthStore();
 
   useEffect(() => {
-    // Only fetch user data if authenticated but don't have user data yet
-    if (isAuthenticated && !user) {
+    // Fetch user data on app initialization if token exists
+    const token = localStorage.getItem('token');
+    if (token && !user) {
       getMe();
     }
-  }, [isAuthenticated, user, getMe]);
+  }, [user, getMe]);
 
   return (
     <BrowserRouter>
@@ -73,12 +101,12 @@ const App = () => {
               } 
             />
             
-            {/* Student Dashboard */}
+            {/* Dashboard Redirect based on Role */}
             <Route 
               path="/dashboard" 
               element={
                 <ProtectedRoute>
-                  <Dashboard />
+                  <DashboardRedirect />
                 </ProtectedRoute>
               } 
             />
@@ -135,6 +163,30 @@ const App = () => {
                 </ProtectedRoute>
               } 
             />
+            <Route 
+              path="/quiz/module/:courseId/:moduleIndex" 
+              element={
+                <ProtectedRoute>
+                  <ModuleQuiz />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/courses/:courseId/module/:moduleIndex/quizzes" 
+              element={
+                <ProtectedRoute>
+                  <ModuleQuizSelection />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/courses/:courseId/module/:moduleIndex/quiz/:quizId" 
+              element={
+                <ProtectedRoute>
+                  <ModuleQuiz />
+                </ProtectedRoute>
+              } 
+            />
             
             {/* Instructor Routes */}
             <Route 
@@ -178,6 +230,58 @@ const App = () => {
               } 
             />
             
+            {/* Content Generation Routes */}
+            <Route 
+              path="/instructor/content-hub" 
+              element={
+                <ProtectedRoute allowedRoles={['instructor', 'admin']}>
+                  <ContentGenerationHub />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/instructor/content-hub/bulk-import" 
+              element={
+                <ProtectedRoute allowedRoles={['instructor', 'admin']}>
+                  <BulkImport />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/instructor/content-hub/templates" 
+              element={
+                <ProtectedRoute allowedRoles={['instructor', 'admin']}>
+                  <CourseTemplates />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/instructor/content-hub/ai-quiz" 
+              element={
+                <ProtectedRoute allowedRoles={['instructor', 'admin']}>
+                  <AIQuizGenerator />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/instructor/content-hub/library" 
+              element={
+                <ProtectedRoute allowedRoles={['instructor', 'admin']}>
+                  <ContentLibrary />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Quiz Routes */}
+            <Route 
+              path="/quiz/module/:courseId/:moduleIndex" 
+              element={
+                <ProtectedRoute allowedRoles={['student', 'instructor', 'admin']}>
+                  <ModuleQuiz />
+                </ProtectedRoute>
+              } 
+            />
+            
             {/* Admin Routes */}
             <Route 
               path="/admin/dashboard" 
@@ -198,6 +302,30 @@ const App = () => {
           </Routes>
         </div>
       </div>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#1f2937',
+            color: '#fff',
+            borderRadius: '8px',
+            border: '1px solid #374151',
+          },
+          success: {
+            iconTheme: {
+              primary: '#10b981',
+              secondary: '#fff',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
     </BrowserRouter>
   );
 };

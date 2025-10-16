@@ -4,6 +4,82 @@ const csv = require('csv-parser');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
+const { generateQuizQuestions, generateCourseTemplate: generateAITemplate } = require('../utils/aiService');
+
+// Helper function to generate quiz for a module
+const generateModuleQuiz = (module, moduleIndex, courseId) => {
+  const questions = [
+    {
+      question: `What is the main learning objective of "${module.title}"?`,
+      options: [
+        'Understanding core concepts and practical application',
+        'Memorizing definitions without context',
+        'Skipping fundamental principles',
+        'Focusing only on advanced topics'
+      ],
+      correctAnswer: 0,
+      explanation: `The primary goal of "${module.title}" is to build a solid foundation through understanding core concepts and applying them practically.`
+    },
+    {
+      question: `Which approach is most effective when studying "${module.title}"?`,
+      options: [
+        'Reading through content once quickly',
+        'Active practice combined with theoretical study',
+        'Avoiding hands-on exercises',
+        'Only watching video content'
+      ],
+      correctAnswer: 1,
+      explanation: 'Active learning through practice and theoretical understanding leads to better retention and skill development.'
+    },
+    {
+      question: `What should you focus on to master the concepts in "${module.title}"?`,
+      options: [
+        'Surface-level understanding only',
+        'Deep comprehension and practical skills',
+        'Memorization without application',
+        'Speed over understanding'
+      ],
+      correctAnswer: 1,
+      explanation: 'Mastery requires both deep understanding of concepts and the ability to apply them in practical scenarios.'
+    },
+    {
+      question: `How does "${module.title}" connect to the overall course?`,
+      options: [
+        'It stands alone without connections',
+        'It builds upon previous modules and prepares for next ones',
+        'It only reviews old material',
+        'It introduces unrelated concepts'
+      ],
+      correctAnswer: 1,
+      explanation: 'Each module is designed to build upon previous knowledge while preparing students for more advanced topics.'
+    },
+    {
+      question: `What is the best way to demonstrate understanding of "${module.title}"?`,
+      options: [
+        'Repeating definitions verbatim',
+        'Applying concepts to solve real problems',
+        'Avoiding practical exercises',
+        'Only completing theoretical assessments'
+      ],
+      correctAnswer: 1,
+      explanation: 'True understanding is demonstrated through the ability to apply learned concepts to solve real-world problems and challenges.'
+    }
+  ];
+
+  return {
+    title: `${module.title} - Assessment Quiz`,
+    description: `Comprehensive quiz covering key concepts from ${module.title}`,
+    questions: questions,
+    duration: 15,
+    totalMarks: questions.length * 2,
+    passingMarks: Math.ceil(questions.length * 0.6 * 2),
+    difficulty: 'intermediate',
+    tags: ['module-quiz', module.title.toLowerCase().replace(/\s+/g, '-')],
+    isActive: true,
+    course: courseId,
+    moduleIndex: moduleIndex
+  };
+};
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -221,7 +297,10 @@ const parseQuizFromCSV = (row, courseId, createdBy, course) => {
 // @access  Private (Instructor/Admin)
 exports.generateCourseTemplate = async (req, res) => {
   try {
-    const { templateType, customization } = req.body;
+    const { templateType, templateId, customization, category, level, duration, instructorId } = req.body;
+    
+    // Use templateId if provided, otherwise use templateType
+    const actualTemplateType = templateId || templateType;
     
     const templates = {
       'web-development': {
@@ -343,31 +422,58 @@ exports.generateCourseTemplate = async (req, res) => {
       }
     };
 
-    let template = templates[templateType];
-    if (!template) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid template type',
-        availableTemplates: Object.keys(templates)
-      });
+    // Use AI to generate template if category/level/duration provided, otherwise use predefined
+    let template;
+    
+    if (category && level && duration) {
+      // AI-powered template generation using Google Gemini (FREE)
+      template = await generateAITemplate(category, level, parseInt(duration) || 40);
+    } else {
+      // Fallback to predefined templates
+      template = templates[actualTemplateType];
+      if (!template) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid template type or missing parameters',
+          availableTemplates: Object.keys(templates),
+          received: { templateType, templateId, actualTemplateType },
+          note: 'For AI generation, provide category, level, and duration parameters'
+        });
+      }
     }
 
     // Apply customization if provided
     if (customization) {
       template = { ...template, ...customization };
-      if (customization.instructor) {
-        template.instructor = customization.instructor;
-        template.instructorId = req.user.id;
-      }
     }
 
-    // Set default instructor info
-    template.instructor = template.instructor || req.user.name;
-    template.instructorId = req.user.id;
+    // Create actual course from template
+    const courseData = {
+      title: template.title,
+      description: template.description,
+      category: template.category,
+      level: template.level,
+      price: template.price || 0,
+      duration: template.duration || '8 weeks', // Add duration field
+      curriculum: template.curriculum,
+      instructor: req.user.name,
+      instructorId: req.user.id,
+      isPublished: false, // Save as draft initially
+      createdAt: new Date()
+    };
 
-    res.status(200).json({
+    const course = await Course.create(courseData);
+
+    res.status(201).json({
       success: true,
-      message: 'Course template generated successfully',
+      message: 'Course created successfully from template',
+      course: {
+        _id: course._id,
+        title: course.title,
+        description: course.description,
+        category: course.category,
+        level: course.level
+      },
       template
     });
 
@@ -412,8 +518,8 @@ exports.autoGenerateQuiz = async (req, res) => {
       });
     }
 
-    // Basic AI-like question generation (would integrate with OpenAI API in production)
-    const generatedQuestions = generateQuestionsForTopic(topic, difficulty, questionCount, questionTypes);
+    // AI-powered question generation using Google Gemini (FREE)
+    const generatedQuestions = await generateQuizQuestions(topic, difficulty, questionCount, questionTypes);
 
     // Determine quiz placement
     let quizType = 'course';
@@ -559,10 +665,13 @@ exports.getAvailableTemplates = async (req, res) => {
         title: 'Web Development Fundamentals',
         description: 'Complete web development course with HTML, CSS, JavaScript, and React',
         category: 'Web Development',
-        level: 'Beginner',
+        level: 'beginner',
         duration: '12 weeks',
         moduleCount: 4,
         estimatedHours: 48,
+        quizCount: 12,
+        features: ['Interactive coding exercises', 'Real-world projects', 'Responsive design practice', 'Modern framework integration'],
+        isPopular: true,
         topics: ['HTML', 'CSS', 'JavaScript', 'React', 'Responsive Design']
       },
       {
@@ -570,10 +679,13 @@ exports.getAvailableTemplates = async (req, res) => {
         title: 'Data Science with Python',
         description: 'Comprehensive data science course covering Python, statistics, and machine learning',
         category: 'Data Science',
-        level: 'Intermediate',
+        level: 'intermediate',
         duration: '16 weeks',
         moduleCount: 4,
         estimatedHours: 64,
+        quizCount: 16,
+        features: ['Jupyter notebooks', 'Real datasets', 'ML projects', 'Statistical analysis'],
+        isPopular: true,
         topics: ['Python', 'NumPy', 'Pandas', 'Statistics', 'Machine Learning', 'Data Visualization']
       },
       {
@@ -581,10 +693,13 @@ exports.getAvailableTemplates = async (req, res) => {
         title: 'Digital Marketing Mastery',
         description: 'Complete digital marketing course covering SEO, social media, and analytics',
         category: 'Digital Marketing',
-        level: 'Beginner',
+        level: 'beginner',
         duration: '10 weeks',
         moduleCount: 5,
         estimatedHours: 40,
+        quizCount: 10,
+        features: ['Case studies', 'Analytics tools', 'Campaign creation', 'ROI tracking'],
+        isPopular: false,
         topics: ['SEO', 'Social Media Marketing', 'Content Marketing', 'Email Marketing', 'Analytics']
       },
       {

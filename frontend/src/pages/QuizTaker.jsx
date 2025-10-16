@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
 import api from '../config/api';
 import {
   Clock, CheckCircle, XCircle, AlertCircle, Award,
@@ -36,7 +37,7 @@ const QuizTaker = () => {
       setLoading(false);
     } catch (error) {
       console.error('Error fetching quiz:', error);
-      alert('Failed to load quiz');
+      toast.error('Failed to load quiz');
       navigate(-1);
     }
   };
@@ -48,7 +49,7 @@ const QuizTaker = () => {
       setAttempt(response.data.attempt);
     } catch (error) {
       console.error('Error starting quiz:', error);
-      alert(error.response?.data?.message || 'Failed to start quiz');
+      toast.error(error.response?.data?.message || 'Failed to start quiz');
     }
   };
 
@@ -118,7 +119,7 @@ const QuizTaker = () => {
       navigate(`/quiz-results/${response.data.attempt._id}`);
     } catch (error) {
       console.error('Error submitting quiz:', error);
-      alert('Failed to submit quiz');
+      toast.error('Failed to submit quiz');
       setSubmitting(false);
     }
   };

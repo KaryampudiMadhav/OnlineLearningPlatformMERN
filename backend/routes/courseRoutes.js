@@ -7,6 +7,7 @@ const {
   updateCourse,
   deleteCourse,
   getCourseStats,
+  getInstructorCourses,
 } = require('../controllers/courseController');
 const { protect, authorize } = require('../middlewares/auth');
 const { validateCourse } = require('../middlewares/validateRequest');
@@ -35,6 +36,9 @@ router.delete(
   authorize('admin', 'instructor'),
   deleteCourse
 );
+
+// Instructor routes
+router.get('/instructor/my-courses', protect, authorize('admin', 'instructor'), getInstructorCourses);
 
 // Admin only routes
 router.get('/admin/stats', protect, authorize('admin'), getCourseStats);

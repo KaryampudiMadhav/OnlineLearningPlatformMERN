@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
 import { 
   PlayCircle, CheckCircle, Lock, BookOpen, Clock, 
   Award, ChevronDown, ChevronRight, ArrowLeft, Loader2,
@@ -9,6 +10,7 @@ import {
 } from 'lucide-react';
 import api from '../config/api';
 import useAuthStore from '../store/authStore';
+import AISupportChatbot from '../components/AISupportChatbot';
 
 const CourseLearning = () => {
   const { id } = useParams();
@@ -41,7 +43,7 @@ const CourseLearning = () => {
       const userEnrollment = enrollments.find(e => e.course._id === id || e.course === id);
       
       if (!userEnrollment) {
-        alert('You are not enrolled in this course');
+        toast.error('You are not enrolled in this course');
         navigate(`/courses/${id}`);
         return;
       }
@@ -63,7 +65,7 @@ const CourseLearning = () => {
       }
     } catch (error) {
       console.error('Failed to fetch course:', error);
-      alert('Failed to load course. Please try again.');
+      toast.error('Failed to load course. Please try again.');
       navigate('/dashboard');
     } finally {
       setLoading(false);
@@ -104,7 +106,7 @@ const CourseLearning = () => {
         setTimeout(() => goToNextLesson(), 500);
       }
     } catch (error) {
-      alert('Failed to update progress');
+      toast.error('Failed to update progress');
     } finally {
       setCompletingLesson(false);
     }
@@ -421,6 +423,31 @@ const CourseLearning = () => {
                             </button>
                           );
                         })}
+                        
+                        {/* Module Quiz */}
+                        <div className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border-t border-orange-500/30">
+                          <button
+                            onClick={() => navigate(`/quiz/module/${course._id}/${sectionIndex}`)}
+                            className="w-full p-4 text-left hover:bg-orange-500/10 transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <FileText className="w-4 h-4 text-white" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-orange-300 truncate">
+                                  📝 Module {sectionIndex + 1} Quiz
+                                </p>
+                                <p className="text-sm text-orange-400">
+                                  Test your understanding • {section.quizRecommendation?.questionCount || 10} questions
+                                </p>
+                              </div>
+                              <div className="text-orange-400">
+                                <ChevronRight className="w-4 h-4" />
+                              </div>
+                            </div>
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -430,6 +457,9 @@ const CourseLearning = () => {
           </div>
         </div>
       </div>
+
+      {/* AI Support Chatbot */}
+      <AISupportChatbot />
     </div>
   );
 };

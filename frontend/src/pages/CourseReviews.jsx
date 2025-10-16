@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, AlertCircle } from 'lucide-react';
 import useAuthStore from '../store/authStore';
@@ -17,17 +17,13 @@ const CourseReviews = () => {
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchData();
-  }, [courseId]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       
       // Fetch course details
       const courseResponse = await api.get(`/courses/${courseId}`);
-      setCourse(courseResponse.data.course);
+      setCourse(courseResponse.data.data);
 
       if (user) {
         // Check enrollment
@@ -56,7 +52,11 @@ const CourseReviews = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [courseId, user]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleReviewSuccess = () => {
     setShowForm(false);
