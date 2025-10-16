@@ -1,28 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   Clock, BookOpen, Target, TrendingUp, Star, 
   ArrowRight, Brain, CheckCircle, Play
 } from 'lucide-react';
 import api from '../config/api';
-import useAuthStore from '../store/authStore';
+
 import toast from 'react-hot-toast';
 
 const ModuleQuizSelection = () => {
   const { courseId, moduleIndex } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuthStore();
   
   const [course, setCourse] = useState(null);
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedDifficulty, setSelectedDifficulty] = useState('all');
 
-  useEffect(() => {
-    fetchCourseAndQuizzes();
-  }, [courseId, moduleIndex]);
-
-  const fetchCourseAndQuizzes = async () => {
+  const fetchCourseAndQuizzes = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -44,7 +39,11 @@ const ModuleQuizSelection = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [courseId, moduleIndex]);
+
+  useEffect(() => {
+    fetchCourseAndQuizzes();
+  }, [fetchCourseAndQuizzes]);
 
   const getDifficultyColor = (difficulty) => {
     switch (difficulty?.toLowerCase()) {

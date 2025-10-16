@@ -1,4 +1,5 @@
-const fetch = require('node-fetch');
+// Use native fetch or fallback to node-fetch
+const fetch = globalThis.fetch || require('node-fetch');
 
 class DynamicQuizService {
   constructor() {

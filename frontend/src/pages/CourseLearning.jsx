@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -24,11 +24,7 @@ const CourseLearning = () => {
   const [expandedSections, setExpandedSections] = useState({});
   const [completingLesson, setCompletingLesson] = useState(false);
 
-  useEffect(() => {
-    fetchCourseAndEnrollment();
-  }, [id]);
-
-  const fetchCourseAndEnrollment = async () => {
+  const fetchCourseAndEnrollment = useCallback(async () => {
     try {
       setLoading(true);
       const [courseRes, enrollmentRes] = await Promise.all([
@@ -70,7 +66,11 @@ const CourseLearning = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, navigate]);
+
+  useEffect(() => {
+    fetchCourseAndEnrollment();
+  }, [fetchCourseAndEnrollment]);
 
   const isLessonCompleted = (sectionIndex, lessonIndex) => {
     if (!enrollment || !enrollment.completedLessons) return false;
@@ -427,7 +427,7 @@ const CourseLearning = () => {
                         {/* Module Quiz */}
                         <div className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border-t border-orange-500/30">
                           <button
-                            onClick={() => navigate(`/quiz/module/${course._id}/${sectionIndex}`)}
+                            onClick={() => navigate(`/courses/${course._id}/module/${sectionIndex}/quizzes`)}
                             className="w-full p-4 text-left hover:bg-orange-500/10 transition-colors"
                           >
                             <div className="flex items-center gap-3">
@@ -436,10 +436,10 @@ const CourseLearning = () => {
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="font-medium text-orange-300 truncate">
-                                  📝 Module {sectionIndex + 1} Quiz
+                                  🧠 Module {sectionIndex + 1} Quizzes
                                 </p>
                                 <p className="text-sm text-orange-400">
-                                  Test your understanding • {section.quizRecommendation?.questionCount || 10} questions
+                                  Test your understanding • {section.quizRecommendation?.totalQuizzes || 3} AI-generated quizzes
                                 </p>
                               </div>
                               <div className="text-orange-400">

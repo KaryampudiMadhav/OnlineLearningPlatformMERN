@@ -203,15 +203,19 @@ exports.createCourse = async (req, res, next) => {
               description: aiQuiz.description,
               questions: aiQuiz.questions,
               duration: 15, // 15 minutes per quiz
-              difficulty: aiQuiz.difficulty,
+              difficulty: aiQuiz.difficulty || 'intermediate',
               course: course._id,
               createdBy: req.user._id,
               moduleIndex: i,
               moduleTitle: module.title,
               quizType: 'module',
               isActive: true,
-              // Add quiz sequence number
-              quizSequence: quizIndex + 1
+              passingScore: 70,
+              maxAttempts: 3,
+              shuffleQuestions: false,
+              shuffleOptions: false,
+              showCorrectAnswers: true,
+              showExplanations: true
             };
             
             const savedQuiz = await Quiz.create(quizData);

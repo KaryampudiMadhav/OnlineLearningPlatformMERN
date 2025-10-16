@@ -6,15 +6,13 @@ import {
   BookOpen, Target, TrendingUp
 } from 'lucide-react';
 import api from '../config/api';
-import useAuthStore from '../store/authStore';
+
 import toast from 'react-hot-toast';
 
 const ModuleQuiz = () => {
   const { courseId, moduleIndex, quizId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuthStore();
   
-  const [course, setCourse] = useState(null);
   const [quiz, setQuiz] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -29,7 +27,6 @@ const ModuleQuiz = () => {
       // First fetch the course
       const courseResponse = await api.get(`/courses/${courseId}`);
       const courseData = courseResponse.data.data || courseResponse.data;
-      setCourse(courseData);
 
       if (quizId) {
         // Fetch specific quiz by ID
