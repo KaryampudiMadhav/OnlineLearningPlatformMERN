@@ -3,77 +3,6 @@ const Quiz = require('../models/Quiz');
 const User = require('../models/User');
 const dynamicQuizService = require('../utils/dynamicQuizService');
 
-// Helper function to generate quiz for a module
-const generateModuleQuiz = (module, moduleIndex, courseId, instructorId) => {
-  const questionData = [
-    {
-      question: `What is the main learning objective of "${module.title}"?`,
-      options: [
-        { text: 'Understanding core concepts and practical application', isCorrect: true },
-        { text: 'Memorizing definitions without context', isCorrect: false },
-        { text: 'Skipping fundamental principles', isCorrect: false },
-        { text: 'Focusing only on advanced topics', isCorrect: false }
-      ],
-      explanation: `The primary goal of "${module.title}" is to build a solid foundation through understanding core concepts and applying them practically.`
-    },
-    {
-      question: `Which approach is most effective when studying "${module.title}"?`,
-      options: [
-        { text: 'Reading through content once quickly', isCorrect: false },
-        { text: 'Active practice combined with theoretical study', isCorrect: true },
-        { text: 'Avoiding hands-on exercises', isCorrect: false },
-        { text: 'Only watching video content', isCorrect: false }
-      ],
-      explanation: 'Active learning through practice and theoretical understanding leads to better retention and skill development.'
-    },
-    {
-      question: `What should you focus on to master the concepts in "${module.title}"?`,
-      options: [
-        { text: 'Surface-level understanding only', isCorrect: false },
-        { text: 'Deep comprehension and practical skills', isCorrect: true },
-        { text: 'Memorization without application', isCorrect: false },
-        { text: 'Speed over understanding', isCorrect: false }
-      ],
-      explanation: 'Mastery requires both deep understanding of concepts and the ability to apply them in practical scenarios.'
-    },
-    {
-      question: `How does "${module.title}" connect to the overall course?`,
-      options: [
-        { text: 'It stands alone without connections', isCorrect: false },
-        { text: 'It builds upon previous modules and prepares for next ones', isCorrect: true },
-        { text: 'It only reviews old material', isCorrect: false },
-        { text: 'It introduces unrelated concepts', isCorrect: false }
-      ],
-      explanation: 'Each module is designed to build upon previous knowledge while preparing students for more advanced topics.'
-    },
-    {
-      question: `What is the best way to demonstrate understanding of "${module.title}"?`,
-      options: [
-        { text: 'Repeating definitions verbatim', isCorrect: false },
-        { text: 'Applying concepts to solve real problems', isCorrect: true },
-        { text: 'Avoiding practical exercises', isCorrect: false },
-        { text: 'Only completing theoretical assessments', isCorrect: false }
-      ],
-      explanation: 'True understanding is demonstrated through the ability to apply learned concepts to solve real-world problems and challenges.'
-    }
-  ];
-
-  return {
-    title: `${module.title} - Assessment Quiz`,
-    description: `Comprehensive quiz covering key concepts from ${module.title}`,
-    questions: questionData,
-    duration: 15,
-    totalMarks: questionData.length * 2,
-    passingMarks: Math.ceil(questionData.length * 0.6 * 2),
-    difficulty: 'intermediate',
-    tags: ['module-quiz', module.title.toLowerCase().replace(/\s+/g, '-')],
-    isActive: true,
-    course: courseId,
-    createdBy: instructorId,
-    moduleIndex: moduleIndex
-  };
-};
-
 // @desc    Get all courses
 // @route   GET /api/courses
 // @access  Public
@@ -174,109 +103,117 @@ exports.createCourse = async (req, res, next) => {
     // Add instructor ID from logged-in user
     req.body.instructorId = req.user._id;
 
+    // If no curriculum provided, generate dynamic curriculum using AI
+    if (!req.body.curriculum || req.body.curriculum.length === 0) {
+      console.log(`🚀 Generating complete dynamic curriculum for course: ${req.body.title}`);
+      
+      try {
+        const dynamicCurriculum = await dynamicQuizService.generateCompleteCurriculum(
+          req.body.title,
+          req.body.description,
+          req.body.category,
+          req.body.level
+        );
+        
+        if (dynamicCurriculum && dynamicCurriculum.length > 0) {
+          req.body.curriculum = dynamicCurriculum;
+          console.log(`✅ Generated ${dynamicCurriculum.length} dynamic modules for course`);
+        } else {
+          console.log(`⚠️ No dynamic curriculum generated, proceeding with manual curriculum`);
+        }
+      } catch (curriculumError) {
+        console.error('❌ Failed to generate dynamic curriculum:', curriculumError);
+        console.log(`🔄 Proceeding with manual curriculum or empty curriculum`);
+      }
+    }
+
     const course = await Course.create(req.body);
 
-    // Generate quizzes for each module if curriculum exists
+    // Generate AI-powered quizzes for each module in the curriculum
     if (course.curriculum && course.curriculum.length > 0) {
-      console.log(`🎯 Generating quizzes for course: ${course.title}`);
+      console.log(`🎯 Generating AI-powered quizzes for course: ${course.title}`);
       
       for (let i = 0; i < course.curriculum.length; i++) {
         const module = course.curriculum[i];
         
         try {
-          // Generate 3 dynamic AI-powered quizzes for each module
           console.log(`🤖 Generating AI-powered quizzes for module: ${module.title}`);
           
+          // Generate AI-powered quiz for this module
           const aiQuizzes = await dynamicQuizService.generateModuleQuizzes(
             course.title, 
             module.title, 
             module.description || ''
           );
 
-          // Create Quiz documents for each AI-generated quiz
-          const moduleQuizzes = [];
-          for (let quizIndex = 0; quizIndex < aiQuizzes.length; quizIndex++) {
-            const aiQuiz = aiQuizzes[quizIndex];
+          if (aiQuizzes && aiQuizzes.length > 0) {
+            // Use the intermediate-level quiz as the embedded quiz
+            const primaryQuiz = aiQuizzes.find(q => q.difficulty === 'intermediate') || aiQuizzes[0];
             
-            const quizData = {
-              title: aiQuiz.title,
-              description: aiQuiz.description,
-              questions: aiQuiz.questions,
-              duration: 15, // 15 minutes per quiz
-              difficulty: aiQuiz.difficulty || 'intermediate',
-              course: course._id,
-              createdBy: req.user._id,
-              moduleIndex: i,
-              moduleTitle: module.title,
-              quizType: 'module',
-              isActive: true,
-              passingScore: 70,
-              maxAttempts: 3,
-              shuffleQuestions: false,
-              shuffleOptions: false,
-              showCorrectAnswers: true,
-              showExplanations: true
-            };
-            
-            const savedQuiz = await Quiz.create(quizData);
-            moduleQuizzes.push(savedQuiz);
-            
-            console.log(`   ✅ Created ${aiQuiz.difficulty} quiz: ${aiQuiz.title}`);
-          }
-
-          // Add quiz recommendations to the module (use the first quiz as primary)
-          if (moduleQuizzes.length > 0) {
-            const primaryQuiz = moduleQuizzes[0];
-            course.curriculum[i].quizRecommendation = {
+            // Convert AI quiz format to embedded format
+            const embeddedQuiz = {
               title: primaryQuiz.title,
               description: primaryQuiz.description,
-              questionCount: primaryQuiz.questions.length,
-              timeLimit: primaryQuiz.duration,
-              difficulty: primaryQuiz.difficulty,
-              topics: [module.title],
-              questions: primaryQuiz.questions,
-              totalQuizzes: moduleQuizzes.length,
-              quizIds: moduleQuizzes.map(q => q._id)
+              questions: primaryQuiz.questions.map(q => ({
+                question: q.question,
+                type: 'multiple-choice',
+                options: q.options.map(opt => opt.text),
+                correctAnswer: q.options.findIndex(opt => opt.isCorrect),
+                explanation: q.explanation,
+                difficulty: primaryQuiz.difficulty
+              })),
+              duration: 15,
+              passingScore: 70,
+              totalQuestions: primaryQuiz.questions.length
             };
-          }
 
-          console.log(`   🎉 Successfully created ${aiQuizzes.length} AI quizzes for module: ${module.title}`);
-          
-        } catch (quizError) {
-          console.error(`   ❌ Failed to create AI quizzes for module ${module.title}:`, quizError);
-          
-          // Fallback to traditional quiz generation
-          try {
-            const fallbackQuizData = generateModuleQuiz(module, i, course._id, req.user._id);
-            const fallbackQuiz = await Quiz.create(fallbackQuizData);
+            // Store the quiz directly in the curriculum
+            course.curriculum[i].quiz = embeddedQuiz;
             
-            course.curriculum[i].quizRecommendation = {
-              title: fallbackQuiz.title,
-              description: fallbackQuiz.description,
-              questionCount: fallbackQuiz.questions.length,
-              timeLimit: fallbackQuiz.duration,
-              difficulty: fallbackQuiz.difficulty,
-              topics: [module.title],
-              questions: fallbackQuiz.questions,
-              totalQuizzes: 1,
-              quizIds: [fallbackQuiz._id]
-            };
-            
-            console.log(`   🔄 Created fallback quiz for module: ${module.title}`);
-          } catch (fallbackError) {
-            console.error(`   ❌ Failed to create fallback quiz for module ${module.title}:`, fallbackError);
+            console.log(`   ✅ Created AI-powered quiz for module: ${module.title}`);
+          } else {
+            throw new Error('No AI quizzes generated');
           }
+            
+        } catch (quizError) {
+          console.error(`   ❌ Failed to generate AI quizzes for ${module.title}:`, quizError);
+          
+          // Fallback to enhanced template-based quiz
+          console.log(`🔄 Using enhanced fallback quiz generation for: ${module.title}`);
+          
+          const fallbackQuizzes = dynamicQuizService.generateFallbackQuizzes(module.title);
+          const fallbackQuiz = fallbackQuizzes.find(q => q.difficulty === 'beginner') || fallbackQuizzes[0];
+          
+          // Convert fallback quiz to embedded format
+          const embeddedFallbackQuiz = {
+            title: fallbackQuiz.title,
+            description: fallbackQuiz.description,
+            questions: fallbackQuiz.questions.map(q => ({
+              question: q.question,
+              type: 'multiple-choice',
+              options: q.options.map(opt => opt.text),
+              correctAnswer: q.options.findIndex(opt => opt.isCorrect),
+              explanation: q.explanation,
+              difficulty: fallbackQuiz.difficulty
+            })),
+            duration: 15,
+            passingScore: 70,
+            totalQuestions: fallbackQuiz.questions.length
+          };
+
+          course.curriculum[i].quiz = embeddedFallbackQuiz;
+          console.log(`   ✅ Created enhanced fallback quiz for module: ${module.title}`);
         }
       }
       
-      // Save the updated course with quiz recommendations
+      // Save the updated course with embedded quizzes
       await course.save();
-      console.log(`🎉 Successfully created course with ${course.curriculum.length} module quizzes`);
+      console.log(`🎉 Successfully created course with ${course.curriculum.length} modules and AI-powered quizzes`);
     }
 
     res.status(201).json({
       success: true,
-      message: 'Course created successfully',
+      message: 'Course created successfully with dynamic AI-generated content',
       data: course,
     });
   } catch (error) {

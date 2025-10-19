@@ -24,6 +24,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import AdminCourses from './pages/AdminCourses';
 import InstructorDashboard from './pages/InstructorDashboard';
 import CreateCourse from './pages/CreateCourse';
+import DynamicCourseCreator from './pages/DynamicCourseCreator';
 import EditCourse from './pages/EditCourse';
 import ContentGenerationHub from './pages/ContentGenerationHub';
 import BulkImport from './pages/BulkImport';
@@ -202,6 +203,14 @@ const App = () => {
               element={
                 <ProtectedRoute allowedRoles={['instructor', 'admin']}>
                   <CreateCourse />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/instructor/create-course-ai" 
+              element={
+                <ProtectedRoute allowedRoles={['instructor', 'admin']}>
+                  <DynamicCourseCreator />
                 </ProtectedRoute>
               } 
             />

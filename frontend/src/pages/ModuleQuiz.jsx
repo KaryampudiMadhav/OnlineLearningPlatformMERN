@@ -1,17 +1,20 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Clock, CheckCircle, XCircle, AlertCircle, 
   ArrowLeft, ArrowRight, RotateCcw, Award,
   BookOpen, Target, TrendingUp
 } from 'lucide-react';
 import api from '../config/api';
+// eslint-disable-next-line no-unused-vars
+import {motion} from 'framer-motion';
 
 import toast from 'react-hot-toast';
 
 const ModuleQuiz = () => {
   const { courseId, moduleIndex, quizId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   
   const [quiz, setQuiz] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -24,33 +27,78 @@ const ModuleQuiz = () => {
 
   const fetchCourseAndQuiz = useCallback(async () => {
     try {
-      // First fetch the course
+      // Check if quiz data was passed in navigation state
+      if (location.state?.quizData) {
+        console.log('Using quiz data from navigation state');
+        const quizData = location.state.quizData;
+        
+        // Format quiz data for frontend
+        const formattedQuiz = {
+          ...quizData,
+          timeLimit: quizData.duration || 15,
+          questions: quizData.questions.map((q, index) => ({
+            ...q,
+            id: q._id || `q_${index}`,
+            correctAnswer: q.options.findIndex(opt => opt.isCorrect)
+          }))
+        };
+        
+        setQuiz(formattedQuiz);
+        setTimeLeft(formattedQuiz.timeLimit * 60);
+        setLoading(false);
+        return;
+      }
+
+      // Fallback: First fetch the course
       const courseResponse = await api.get(`/courses/${courseId}`);
       const courseData = courseResponse.data.data || courseResponse.data;
 
       if (quizId) {
-        // Fetch specific quiz by ID
+        // Try to fetch specific quiz by ID (for backward compatibility)
         console.log(`Fetching quiz with ID: ${quizId}`);
-        const quizResponse = await api.get(`/quizzes/${quizId}`);
-        
-        if (quizResponse.data.success) {
-          const quizData = quizResponse.data.quiz || quizResponse.data.data;
+        try {
+          const quizResponse = await api.get(`/quizzes/${quizId}`);
           
-          // Format quiz data for frontend
-          const formattedQuiz = {
-            ...quizData,
-            timeLimit: quizData.duration || 15,
-            questions: quizData.questions.map((q, index) => ({
-              ...q,
-              id: q._id || index,
-              correctAnswer: q.options.findIndex(opt => opt.isCorrect)
-            }))
-          };
-          
-          setQuiz(formattedQuiz);
-          setTimeLeft(formattedQuiz.timeLimit * 60);
-        } else {
-          throw new Error('Failed to load quiz data');
+          if (quizResponse.data.success) {
+            const quizData = quizResponse.data.quiz || quizResponse.data.data;
+            
+            // Format quiz data for frontend
+            const formattedQuiz = {
+              ...quizData,
+              timeLimit: quizData.duration || 15,
+              questions: quizData.questions.map((q, index) => ({
+                ...q,
+                id: q._id || index,
+                correctAnswer: q.options.findIndex(opt => opt.isCorrect)
+              }))
+            };
+            
+            setQuiz(formattedQuiz);
+            setTimeLeft(formattedQuiz.timeLimit * 60);
+          } else {
+            throw new Error('Failed to load quiz data');
+          }
+        } catch (error) {
+          console.log('API quiz fetch failed, trying curriculum fallback:', error.message);
+          // Fallback to curriculum data
+          const moduleIdx = parseInt(moduleIndex);
+          if (courseData.curriculum && courseData.curriculum[moduleIdx] && courseData.curriculum[moduleIdx].quiz) {
+            const moduleQuiz = courseData.curriculum[moduleIdx].quiz;
+            const formattedQuiz = {
+              ...moduleQuiz,
+              timeLimit: moduleQuiz.duration || 15,
+              questions: moduleQuiz.questions.map((q, index) => ({
+                ...q,
+                id: q._id || `q_${index}`,
+                correctAnswer: q.options.findIndex(opt => opt.isCorrect)
+              }))
+            };
+            
+            setQuiz(formattedQuiz);
+            setTimeLeft(formattedQuiz.timeLimit * 60);
+          } else {
+            throw new Error('No quiz found for this module');
+          }
         }
       } else {
         // Fallback to module quiz recommendations (legacy support)
@@ -94,11 +142,44 @@ const ModuleQuiz = () => {
     } finally {
       setLoading(false);
     }
-  }, [courseId, moduleIndex, quizId]);
+  }, [courseId, moduleIndex, quizId, location.state]);
 
   useEffect(() => {
     fetchCourseAndQuiz();
   }, [fetchCourseAndQuiz]);
+
+  const calculateScore = useCallback(() => {
+    let correct = 0;
+    quiz?.questions?.forEach(question => {
+      if (answers[question.id] === question.correctAnswer) {
+        correct++;
+      }
+    });
+    return {
+      correct,
+      total: quiz?.questions?.length || 0,
+      percentage: quiz?.questions?.length ? Math.round((correct / quiz.questions.length) * 100) : 0
+    };
+  }, [quiz, answers]);
+
+  const handleSubmitQuiz = useCallback(async () => {
+    const score = calculateScore();
+    setResults(score);
+    setQuizSubmitted(true);
+
+    try {
+      // Submit quiz attempt to backend
+      await api.post('/quiz-attempts', {
+        courseId,
+        moduleIndex: parseInt(moduleIndex),
+        answers,
+        score: score.percentage,
+        timeSpent: (quiz?.timeLimit * 60) - timeLeft
+      });
+    } catch (error) {
+      console.error('Failed to submit quiz:', error);
+    }
+  }, [courseId, moduleIndex, answers, quiz, timeLeft, calculateScore]);
 
   useEffect(() => {
     let timer;
@@ -240,39 +321,6 @@ const ModuleQuiz = () => {
       setCurrentQuestionIndex(prev => prev - 1);
     }
   };
-
-  const calculateScore = useCallback(() => {
-    let correct = 0;
-    quiz.questions.forEach(question => {
-      if (answers[question.id] === question.correctAnswer) {
-        correct++;
-      }
-    });
-    return {
-      correct,
-      total: quiz.questions.length,
-      percentage: Math.round((correct / quiz.questions.length) * 100)
-    };
-  }, [quiz, answers]);
-
-  const handleSubmitQuiz = useCallback(async () => {
-    const score = calculateScore();
-    setResults(score);
-    setQuizSubmitted(true);
-
-    try {
-      // Submit quiz attempt to backend
-      await api.post('/quiz-attempts', {
-        courseId,
-        moduleIndex: parseInt(moduleIndex),
-        answers,
-        score: score.percentage,
-        timeSpent: (quiz.timeLimit * 60) - timeLeft
-      });
-    } catch (error) {
-      console.error('Failed to submit quiz:', error);
-    }
-  }, [courseId, moduleIndex, answers, quiz, timeLeft, calculateScore]);
 
   const handleRetakeQuiz = () => {
     setAnswers({});
@@ -432,7 +480,7 @@ const ModuleQuiz = () => {
                                     : 'bg-white/5 border-white/10 text-gray-400'
                                 }`}
                               >
-                                {option}
+                                {typeof option === 'object' ? option.text : option}
                                 {optionIndex === question.correctAnswer && (
                                   <span className="ml-2 text-green-400">✓</span>
                                 )}
@@ -519,7 +567,7 @@ const ModuleQuiz = () => {
                         }`}>
                           {String.fromCharCode(65 + index)}
                         </span>
-                        {option}
+                        {typeof option === 'object' ? option.text : option}
                       </span>
                     </button>
                   ))}

@@ -26,12 +26,83 @@ const ModuleQuizSelection = () => {
       const courseData = courseResponse.data.data || courseResponse.data;
       setCourse(courseData);
 
-      // Fetch all quizzes for this module
-      const quizzesResponse = await api.get(`/quizzes/course/${courseId}/module/${moduleIndex}/all`);
-      
-      if (quizzesResponse.data.success) {
-        setQuizzes(quizzesResponse.data.quizzes || []);
-        console.log(`Found ${quizzesResponse.data.quizzes?.length || 0} quizzes for module`);
+      // First try embedded quiz from curriculum
+      const moduleIdx = parseInt(moduleIndex);
+      if (courseData.curriculum && courseData.curriculum[moduleIdx] && courseData.curriculum[moduleIdx].quiz) {
+        const moduleQuiz = courseData.curriculum[moduleIdx].quiz;
+        
+        // Create different difficulty versions of the quiz if not already present
+        const quizVersions = [];
+        
+        if (moduleQuiz.questions && moduleQuiz.questions.length > 0) {
+          // Generate three difficulty levels
+          const allQuestions = moduleQuiz.questions;
+          const questionCount = Math.max(5, Math.floor(allQuestions.length * 0.6)); // At least 5 questions
+          
+          // Beginner - easier questions
+          quizVersions.push({
+            ...moduleQuiz,
+            id: `${moduleIdx}_beginner`,
+            difficulty: 'Beginner',
+            duration: Math.max(10, moduleQuiz.duration - 5),
+            questions: allQuestions.slice(0, questionCount),
+            title: `${moduleQuiz.title} - Beginner`,
+            description: 'Start with fundamental concepts and basic understanding'
+          });
+          
+          // Intermediate - all questions
+          quizVersions.push({
+            ...moduleQuiz,
+            id: `${moduleIdx}_intermediate`,
+            difficulty: 'Intermediate',
+            duration: moduleQuiz.duration,
+            questions: allQuestions,
+            title: `${moduleQuiz.title} - Intermediate`,
+            description: 'Test your comprehensive understanding of the module'
+          });
+          
+          // Advanced - all questions with higher passing score
+          quizVersions.push({
+            ...moduleQuiz,
+            id: `${moduleIdx}_advanced`,
+            difficulty: 'Advanced',
+            duration: Math.min(45, moduleQuiz.duration + 10),
+            passingScore: Math.min(90, (moduleQuiz.passingScore || 70) + 15),
+            questions: allQuestions,
+            title: `${moduleQuiz.title} - Advanced`,
+            description: 'Challenge yourself with higher standards and deeper analysis'
+          });
+        }
+        
+        if (quizVersions.length > 0) {
+          setQuizzes(quizVersions);
+          console.log(`Generated ${quizVersions.length} quiz variants from embedded data`);
+          return;
+        }
+      }
+
+      // Fallback: Try API for separate Quiz documents
+      try {
+        const quizzesResponse = await api.get(`/quizzes/course/${courseId}/module/${moduleIndex}/all`);
+        
+        if (quizzesResponse.data.success && quizzesResponse.data.quizzes.length > 0) {
+          // Format API quizzes to match expected structure
+          const apiQuizzes = quizzesResponse.data.quizzes.map(quiz => ({
+            ...quiz,
+            id: quiz._id,
+            questions: quiz.questions || [],
+            questionCount: quiz.questions?.length || 0
+          }));
+          
+          setQuizzes(apiQuizzes);
+          console.log(`Found ${apiQuizzes.length} quizzes from API`);
+        } else {
+          console.log('No quizzes found via API');
+          setQuizzes([]);
+        }
+      } catch (apiError) {
+        console.error('API fallback failed:', apiError);
+        setQuizzes([]);
       }
     } catch (error) {
       console.error('Failed to fetch course and quizzes:', error);
@@ -68,7 +139,11 @@ const ModuleQuizSelection = () => {
     : quizzes.filter(quiz => quiz.difficulty?.toLowerCase() === selectedDifficulty);
 
   const handleStartQuiz = (quizId) => {
-    navigate(`/courses/${courseId}/module/${moduleIndex}/quiz/${quizId}`);
+    // Find the specific quiz by ID and pass it in the navigation state
+    const selectedQuiz = quizzes.find(q => q.id === quizId);
+    navigate(`/courses/${courseId}/module/${moduleIndex}/quiz/${quizId}`, {
+      state: { quizData: selectedQuiz }
+    });
   };
 
   if (loading) {
@@ -150,7 +225,7 @@ const ModuleQuizSelection = () => {
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredQuizzes.map((quiz, index) => (
-              <div key={quiz._id} className="bg-slate-800 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+              <div key={quiz.id} className="bg-slate-800 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
                 {/* Quiz Header */}
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
@@ -188,7 +263,7 @@ const ModuleQuizSelection = () => {
 
                 {/* Start Quiz Button */}
                 <button
-                  onClick={() => handleStartQuiz(quiz._id)}
+                  onClick={() => handleStartQuiz(quiz.id)}
                   className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-300 flex items-center justify-center gap-2 group"
                 >
                   <Play className="w-4 h-4 group-hover:scale-110 transition-transform" />

@@ -44,7 +44,7 @@ const certificateSchema = new mongoose.Schema({
 
 // Index for faster lookups
 certificateSchema.index({ user: 1, course: 1 });
-certificateSchema.index({ certificateId: 1 });
+// certificateId already has unique index from schema definition
 
 // Generate unique certificate ID
 certificateSchema.pre('save', async function(next) {

@@ -33,7 +33,7 @@ const generateQuizQuestions = async (topic, difficulty, questionCount, questionT
   }
 
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     const prompt = `Create ${questionCount} ${difficulty}-level quiz questions about "${topic}".
 
@@ -116,7 +116,7 @@ const generateCourseTemplate = async (category, level, duration) => {
   }
 
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     const prompt = `Create a comprehensive course template for "${category}" at ${level} level.
 
@@ -189,6 +189,124 @@ Generate the template:`;
     console.error('❌ AI template generation failed:', error.message);
     console.log('🔄 Falling back to predefined template');
     return generateMockTemplate(category, level, duration);
+  }
+};
+
+// NEW: Generate skills-based course with dynamic AI content
+const generateSkillsBasedCourse = async (skills) => {
+  if (!genAI) {
+    console.log('🔄 AI not configured, cannot generate skills-based course');
+    throw new Error('AI service not initialized. Please configure GEMINI_API_KEY.');
+  }
+
+  try {
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+
+    const prompt = `Your task is to:
+1. Analyze a list of technical skills: ${skills.map(s => `"${s}"`).join(', ')}.
+2. For each skill, return:
+   - difficulty: "beginner", "intermediate", or "advanced"
+   - steps: A list of learning modules with:
+     - step: A description of what the learner should do
+     - resources: 3–5 helpful URLs (YouTube videos, articles, official docs, courses)
+     - estimatedTime: Estimated time to complete the step (e.g., "2 hours", "1 week")
+     - tags: Array of tags like ["project-based", "video", "course", "documentation"]
+     - quiz: A short quiz (4–5 questions) for that module step. Each question must include:
+        - question: The question text
+        - options: Multiple choice options (array of 4 strings)
+        - answer: Correct answer from options
+
+🚨 IMPORTANT:
+- Return ONLY raw JSON with the structure shown below
+- DO NOT wrap output in markdown or code blocks
+- Make sure JSON is parsable
+- Each skill should have at least 5 modules (steps)
+- Use REAL resource URLs from YouTube, official documentation, etc.
+
+EXACT FORMAT:
+[
+  {
+    "skill": "Skill name",
+    "difficulty": "beginner",
+    "steps": [
+      {
+        "step": "Learn basic syntax",
+        "estimatedTime": "2 hours",
+        "tags": ["video", "documentation"],
+        "resources": [
+          "https://youtube.com/watch?v=example1",
+          "https://developer.mozilla.org/docs",
+          "https://www.w3schools.com/tutorial"
+        ],
+        "quiz": [
+          {
+            "question": "What is the correct way to declare a variable?",
+            "options": ["var myVar = 5;", "int myVar = 5;", "let myVar = five;", "variable myVar = 5;"],
+            "answer": "var myVar = 5;"
+          },
+          {
+            "question": "Another question here",
+            "options": ["Option A", "Option B", "Option C", "Option D"],
+            "answer": "Option A"
+          }
+        ]
+      }
+    ]
+  }
+]
+
+Generate the course structure now:`;
+
+    console.log(`🤖 Generating skills-based course for: ${skills.join(', ')}`);
+    
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+    
+    console.log('📝 Raw AI Response (first 500 chars):', text.substring(0, 500) + '...');
+    
+    // Parse JSON response - extract JSON array
+    let courseData;
+    try {
+      // Remove markdown code blocks if present
+      let cleanText = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+      
+      // Find JSON array
+      const jsonMatch = cleanText.match(/\[\s*\{[\s\S]*\}\s*\]/);
+      if (jsonMatch) {
+        courseData = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error('No valid JSON array found in response');
+      }
+    } catch (parseError) {
+      console.error('❌ Failed to parse AI response:', parseError.message);
+      console.log('Raw response:', text);
+      throw new Error('Failed to parse AI-generated course structure');
+    }
+
+    // Validate structure
+    if (!Array.isArray(courseData) || courseData.length === 0) {
+      throw new Error('Invalid course data structure');
+    }
+
+    // Validate each skill
+    for (const skillData of courseData) {
+      if (!skillData.skill || !skillData.difficulty || !Array.isArray(skillData.steps)) {
+        throw new Error(`Invalid skill data structure for ${skillData.skill || 'unknown'}`);
+      }
+      
+      // Ensure at least 5 steps
+      if (skillData.steps.length < 5) {
+        console.warn(`⚠️  Skill "${skillData.skill}" has only ${skillData.steps.length} steps, expected at least 5`);
+      }
+    }
+
+    console.log(`✅ Generated course structure for ${courseData.length} skills`);
+    return courseData;
+
+  } catch (error) {
+    console.error('❌ Skills-based course generation failed:', error.message);
+    throw error;
   }
 };
 
@@ -337,5 +455,6 @@ const generateMockTemplate = (category, level, duration) => {
 module.exports = {
   initializeAI,
   generateQuizQuestions,
-  generateCourseTemplate
+  generateCourseTemplate,
+  generateSkillsBasedCourse
 };

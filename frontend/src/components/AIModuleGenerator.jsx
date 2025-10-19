@@ -67,36 +67,56 @@ const AIModuleGenerator = ({ onModulesGenerated, existingModules = [] }) => {
 
       const prompt = `Create ${config.moduleCount} course modules for the topic: "${config.topic}" at ${config.difficulty} difficulty level.
 
-Each module should have ${config.lessonsPerModule} lessons and a quiz recommendation.
+Each module should have ${config.lessonsPerModule} lessons and a complete quiz with actual questions.
+
+For video URLs, provide realistic YouTube video URLs related to the lesson topic. You can use these educational YouTube channels as reference:
+- freeCodeCamp: https://www.youtube.com/@freecodecamp
+- Traversy Media: https://www.youtube.com/@TraversyMedia  
+- Academind: https://www.youtube.com/@academind
+- Net Ninja: https://www.youtube.com/@NetNinja
+- Programming with Mosh: https://www.youtube.com/@programmingwithmosh
 
 Format as JSON:
 {
   "modules": [
     {
       "title": "Module title",
-      "description": "Module description",
+      "description": "Module description", 
       "lessons": [
         {
           "title": "Lesson title",
           "content": "Detailed lesson content",
           "duration": "15 minutes",
-          "videoUrl": "",
+          "videoUrl": "https://www.youtube.com/watch?v=EXAMPLE_ID",
           "materials": ["Study guide", "Practice exercises"]
         }
       ],
-      "quizRecommendation": {
+      "quiz": {
         "title": "Module Quiz Title",
-        "description": "Quiz description",
-        "questionCount": 10,
+        "description": "Quiz description to test understanding of this module",
         "duration": 15,
+        "passingScore": 70,
         "difficulty": "${config.difficulty}",
-        "topics": ["topic1", "topic2", "topic3"]
+        "questions": [
+          {
+            "question": "What is the main concept covered in this module?",
+            "type": "multiple-choice",
+            "options": [
+              {"text": "Option A", "isCorrect": false},
+              {"text": "Option B", "isCorrect": true},
+              {"text": "Option C", "isCorrect": false},
+              {"text": "Option D", "isCorrect": false}
+            ],
+            "explanation": "Detailed explanation of why the correct answer is right",
+            "points": 1
+          }
+        ]
       }
     }
   ]
 }
 
-Make the content educational, progressive, and practical for ${config.topic}. Include relevant quiz recommendations for each module.`;
+Generate 8-12 diverse quiz questions per module that test comprehension, application, and analysis of the ${config.topic} concepts. Make questions progressively challenging and include clear explanations. Ensure each question has exactly 4 options with only one correct answer.`;
 
       console.log('📡 Calling Gemini API...');
       
@@ -163,36 +183,98 @@ Make the content educational, progressive, and practical for ${config.topic}. In
             title: 'JavaScript Fundamentals',
             description: 'Master the core concepts of JavaScript programming',
             lessons: [
-              { title: 'Variables and Data Types', content: 'Learn about var, let, const, and JavaScript data types', duration: '20 minutes' },
-              { title: 'Functions and Scope', content: 'Understand function declarations, expressions, and scope', duration: '25 minutes' },
-              { title: 'Control Structures', content: 'Master if/else, loops, and conditional logic', duration: '20 minutes' },
-              { title: 'Objects and Arrays', content: 'Working with JavaScript objects and arrays', duration: '30 minutes' }
+              { title: 'Variables and Data Types', content: 'Learn about var, let, const, and JavaScript data types', duration: '20 minutes', videoUrl: 'https://www.youtube.com/watch?v=9xnBaVqI38w' },
+              { title: 'Functions and Scope', content: 'Understand function declarations, expressions, and scope', duration: '25 minutes', videoUrl: 'https://www.youtube.com/watch?v=xjAu2Y2nJ34' },
+              { title: 'Control Structures', content: 'Master if/else, loops, and conditional logic', duration: '20 minutes', videoUrl: 'https://www.youtube.com/watch?v=s-ES6Tyt74A' },
+              { title: 'Objects and Arrays', content: 'Working with JavaScript objects and arrays', duration: '30 minutes', videoUrl: 'https://www.youtube.com/watch?v=vkPaVHfwG8Y' }
             ],
-            quizRecommendation: {
+            quiz: {
               title: 'JavaScript Fundamentals Quiz',
               description: 'Test your understanding of basic JavaScript concepts',
-              questionCount: 12,
               duration: 20,
-              difficulty: 'beginner',
-              topics: ['Variables', 'Functions', 'Data Types', 'Control Flow', 'Objects', 'Arrays']
+              passingScore: 70,
+              difficulty: 'Beginner',
+              questions: [
+                {
+                  question: 'Which keyword is used to declare a block-scoped variable in JavaScript?',
+                  type: 'multiple-choice',
+                  options: [
+                    { text: 'var', isCorrect: false },
+                    { text: 'let', isCorrect: true },
+                    { text: 'const', isCorrect: false },
+                    { text: 'function', isCorrect: false }
+                  ],
+                  explanation: 'let is used to declare block-scoped variables that can be reassigned.',
+                  points: 1
+                },
+                {
+                  question: 'What is the correct way to declare a function in JavaScript?',
+                  type: 'multiple-choice',
+                  options: [
+                    { text: 'function myFunc() {}', isCorrect: true },
+                    { text: 'def myFunc():', isCorrect: false },
+                    { text: 'func myFunc() {}', isCorrect: false },
+                    { text: 'method myFunc() {}', isCorrect: false }
+                  ],
+                  explanation: 'Functions in JavaScript are declared using the function keyword.',
+                  points: 1
+                },
+                {
+                  question: 'Which of these is NOT a JavaScript data type?',
+                  type: 'multiple-choice',
+                  options: [
+                    { text: 'string', isCorrect: false },
+                    { text: 'boolean', isCorrect: false },
+                    { text: 'integer', isCorrect: true },
+                    { text: 'undefined', isCorrect: false }
+                  ],
+                  explanation: 'JavaScript has number type but not specifically integer type.',
+                  points: 1
+                }
+              ]
             }
           },
           {
             title: 'Advanced JavaScript',
             description: 'Dive deep into advanced JavaScript concepts',
             lessons: [
-              { title: 'Closures and Hoisting', content: 'Understand advanced scoping and variable behavior', duration: '25 minutes' },
-              { title: 'Async Programming', content: 'Promises, async/await, and handling asynchronous code', duration: '30 minutes' },
-              { title: 'ES6+ Features', content: 'Arrow functions, destructuring, template literals', duration: '25 minutes' },
-              { title: 'DOM Manipulation', content: 'Interacting with HTML elements dynamically', duration: '30 minutes' }
+              { title: 'Closures and Hoisting', content: 'Understand advanced scoping and variable behavior', duration: '25 minutes', videoUrl: 'https://www.youtube.com/watch?v=3a0I8ICR1Vg' },
+              { title: 'Async Programming', content: 'Promises, async/await, and handling asynchronous code', duration: '30 minutes', videoUrl: 'https://www.youtube.com/watch?v=vn3tm0quoqE' },
+              { title: 'ES6+ Features', content: 'Arrow functions, destructuring, template literals', duration: '25 minutes', videoUrl: 'https://www.youtube.com/watch?v=nZ1DMMsyVyI' },
+              { title: 'DOM Manipulation', content: 'Interacting with HTML elements dynamically', duration: '30 minutes', videoUrl: 'https://www.youtube.com/watch?v=5fb2aPlgoys' }
             ],
-            quizRecommendation: {
+            quiz: {
               title: 'Advanced JavaScript Quiz',
               description: 'Challenge yourself with advanced JavaScript concepts',
-              questionCount: 15,
               duration: 25,
-              difficulty: 'intermediate',
-              topics: ['Closures', 'Async/Await', 'ES6 Features', 'DOM', 'Hoisting', 'Promises']
+              passingScore: 75,
+              difficulty: 'Intermediate',
+              questions: [
+                {
+                  question: 'What is a closure in JavaScript?',
+                  type: 'multiple-choice',
+                  options: [
+                    { text: 'A function that has access to variables in its outer scope', isCorrect: true },
+                    { text: 'A way to close the browser window', isCorrect: false },
+                    { text: 'A method to end a loop', isCorrect: false },
+                    { text: 'A type of variable declaration', isCorrect: false }
+                  ],
+                  explanation: 'A closure is a function that retains access to variables from its outer lexical scope.',
+                  points: 1
+                },
+                {
+                  question: 'Which method is used to handle promises in JavaScript?',
+                  type: 'multiple-choice',
+                  options: [
+                    { text: 'callback()', isCorrect: false },
+                    { text: 'then()', isCorrect: true },
+                    { text: 'handle()', isCorrect: false },
+                    { text: 'resolve()', isCorrect: false }
+                  ],
+                  explanation: 'The then() method is used to handle resolved promises.',
+                  points: 1
+                }
+              ]
             }
           }
         ]
@@ -203,36 +285,86 @@ Make the content educational, progressive, and practical for ${config.topic}. In
             title: 'React Basics',
             description: 'Learn the fundamentals of React development',
             lessons: [
-              { title: 'Components and JSX', content: 'Understanding React components and JSX syntax', duration: '25 minutes' },
-              { title: 'Props and State', content: 'Managing component data and communication', duration: '30 minutes' },
-              { title: 'Event Handling', content: 'Handling user interactions in React', duration: '20 minutes' },
-              { title: 'Conditional Rendering', content: 'Dynamically showing/hiding content', duration: '20 minutes' }
+              { title: 'Components and JSX', content: 'Understanding React components and JSX syntax', duration: '25 minutes', videoUrl: 'https://www.youtube.com/watch?v=SqcY0GlETPk' },
+              { title: 'Props and State', content: 'Managing component data and communication', duration: '30 minutes', videoUrl: 'https://www.youtube.com/watch?v=4pO-HcG2igk' },
+              { title: 'Event Handling', content: 'Handling user interactions in React', duration: '20 minutes', videoUrl: 'https://www.youtube.com/watch?v=Znqv84xi8Vs' },
+              { title: 'Conditional Rendering', content: 'Dynamically showing/hiding content', duration: '20 minutes', videoUrl: 'https://www.youtube.com/watch?v=7o5FPaVA9m0' }
             ],
-            quizRecommendation: {
+            quiz: {
               title: 'React Basics Quiz',
               description: 'Test your knowledge of React fundamentals',
-              questionCount: 10,
               duration: 18,
-              difficulty: 'beginner',
-              topics: ['Components', 'JSX', 'Props', 'State', 'Events', 'Rendering']
+              passingScore: 70,
+              difficulty: 'Beginner',
+              questions: [
+                {
+                  question: 'What does JSX stand for in React?',
+                  type: 'multiple-choice',
+                  options: [
+                    { text: 'JavaScript XML', isCorrect: true },
+                    { text: 'JavaScript Extensions', isCorrect: false },
+                    { text: 'Java Syntax Extension', isCorrect: false },
+                    { text: 'JavaScript Extra', isCorrect: false }
+                  ],
+                  explanation: 'JSX stands for JavaScript XML, which allows writing HTML-like syntax in JavaScript.',
+                  points: 1
+                },
+                {
+                  question: 'How do you pass data from parent to child component in React?',
+                  type: 'multiple-choice',
+                  options: [
+                    { text: 'Using state', isCorrect: false },
+                    { text: 'Using props', isCorrect: true },
+                    { text: 'Using refs', isCorrect: false },
+                    { text: 'Using context', isCorrect: false }
+                  ],
+                  explanation: 'Props are used to pass data from parent components to child components.',
+                  points: 1
+                }
+              ]
             }
           },
           {
             title: 'React Hooks',
             description: 'Master React Hooks for modern development',
             lessons: [
-              { title: 'useState Hook', content: 'Managing component state with hooks', duration: '25 minutes' },
-              { title: 'useEffect Hook', content: 'Handling side effects and lifecycle events', duration: '30 minutes' },
-              { title: 'Custom Hooks', content: 'Creating reusable stateful logic', duration: '25 minutes' },
-              { title: 'Context API', content: 'Global state management with Context', duration: '30 minutes' }
+              { title: 'useState Hook', content: 'Managing component state with hooks', duration: '25 minutes', videoUrl: 'https://www.youtube.com/watch?v=O6P86uwfdR0' },
+              { title: 'useEffect Hook', content: 'Handling side effects and lifecycle events', duration: '30 minutes', videoUrl: 'https://www.youtube.com/watch?v=0ZJgIjIuY7U' },
+              { title: 'Custom Hooks', content: 'Creating reusable stateful logic', duration: '25 minutes', videoUrl: 'https://www.youtube.com/watch?v=6ThXsUwLWvc' },
+              { title: 'Context API', content: 'Global state management with Context', duration: '30 minutes', videoUrl: 'https://www.youtube.com/watch?v=35lXWvCuM8o' }
             ],
-            quizRecommendation: {
+            quiz: {
               title: 'React Hooks Mastery Quiz',
               description: 'Advanced quiz on React Hooks and modern patterns',
-              questionCount: 12,
               duration: 22,
-              difficulty: 'intermediate',
-              topics: ['useState', 'useEffect', 'Custom Hooks', 'Context API', 'Hook Rules']
+              passingScore: 75,
+              difficulty: 'Intermediate',
+              questions: [
+                {
+                  question: 'What is the purpose of the useState Hook?',
+                  type: 'multiple-choice',
+                  options: [
+                    { text: 'To manage component state in functional components', isCorrect: true },
+                    { text: 'To handle side effects', isCorrect: false },
+                    { text: 'To create custom hooks', isCorrect: false },
+                    { text: 'To access the DOM', isCorrect: false }
+                  ],
+                  explanation: 'useState allows functional components to have state management.',
+                  points: 1
+                },
+                {
+                  question: 'When should you use useEffect?',
+                  type: 'multiple-choice',
+                  options: [
+                    { text: 'Only for API calls', isCorrect: false },
+                    { text: 'For side effects and lifecycle events', isCorrect: true },
+                    { text: 'Only for event handling', isCorrect: false },
+                    { text: 'Only for DOM manipulation', isCorrect: false }
+                  ],
+                  explanation: 'useEffect is used for side effects like API calls, subscriptions, and DOM updates.',
+                  points: 1
+                }
+              ]
             }
           }
         ]
@@ -243,18 +375,43 @@ Make the content educational, progressive, and practical for ${config.topic}. In
             title: 'Python Fundamentals',
             description: 'Learn the basics of Python programming',
             lessons: [
-              { title: 'Syntax and Variables', content: 'Python syntax, variables, and basic operations', duration: '20 minutes' },
-              { title: 'Data Structures', content: 'Lists, dictionaries, tuples, and sets', duration: '30 minutes' },
-              { title: 'Functions and Modules', content: 'Creating functions and organizing code', duration: '25 minutes' },
-              { title: 'File Handling', content: 'Reading and writing files in Python', duration: '20 minutes' }
+              { title: 'Syntax and Variables', content: 'Python syntax, variables, and basic operations', duration: '20 minutes', videoUrl: 'https://www.youtube.com/watch?v=rfscVS0vtbw' },
+              { title: 'Data Structures', content: 'Lists, dictionaries, tuples, and sets', duration: '30 minutes', videoUrl: 'https://www.youtube.com/watch?v=R-HLU9Fl5ug' },
+              { title: 'Functions and Modules', content: 'Creating functions and organizing code', duration: '25 minutes', videoUrl: 'https://www.youtube.com/watch?v=9Os0o3wzS_I' },
+              { title: 'File Handling', content: 'Reading and writing files in Python', duration: '20 minutes', videoUrl: 'https://www.youtube.com/watch?v=Uh2ebFW8OYM' }
             ],
-            quizRecommendation: {
+            quiz: {
               title: 'Python Fundamentals Quiz',
               description: 'Test your understanding of basic Python concepts',
-              questionCount: 12,
               duration: 20,
-              difficulty: 'beginner',
-              topics: ['Syntax', 'Variables', 'Data Structures', 'Functions', 'File Operations']
+              passingScore: 70,
+              difficulty: 'Beginner',
+              questions: [
+                {
+                  question: 'Which of the following is the correct way to declare a variable in Python?',
+                  type: 'multiple-choice',
+                  options: [
+                    { text: 'var x = 5', isCorrect: false },
+                    { text: 'x = 5', isCorrect: true },
+                    { text: 'int x = 5', isCorrect: false },
+                    { text: 'declare x = 5', isCorrect: false }
+                  ],
+                  explanation: 'Python uses simple assignment without type declarations.',
+                  points: 1
+                },
+                {
+                  question: 'What is the correct way to define a function in Python?',
+                  type: 'multiple-choice',
+                  options: [
+                    { text: 'function myFunc():', isCorrect: false },
+                    { text: 'def myFunc():', isCorrect: true },
+                    { text: 'func myFunc():', isCorrect: false },
+                    { text: 'define myFunc():', isCorrect: false }
+                  ],
+                  explanation: 'Python functions are defined using the def keyword.',
+                  points: 1
+                }
+              ]
             }
           },
           {
