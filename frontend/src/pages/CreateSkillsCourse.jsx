@@ -173,7 +173,7 @@ const CreateSkillsCourse = () => {
       toast.success('Course saved! Redirecting to your dashboard...');
       
       setTimeout(() => {
-        navigate(`/course/${generatedCurriculum._id}`);
+        navigate(`/courses/${generatedCurriculum._id}`);
       }, 2000);
     } catch (err) {
       console.error('Error creating course:', err);

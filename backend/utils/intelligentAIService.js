@@ -53,7 +53,7 @@ Requirements:
 Generate the complete JSON now:`;
 
       const model = genAI.getGenerativeModel({ 
-        model: 'gemini-1.5-flash',
+        model: 'gemini-2.0-flash-exp',
         generationConfig: {
           temperature: 0.7,
           maxOutputTokens: 4096, // Enough for detailed structure
@@ -978,7 +978,7 @@ Return ONLY valid JSON (no markdown):
 Generate exactly ${config.moduleCount} well-structured modules NOW:`;
 
       const model = genAI.getGenerativeModel({ 
-        model: 'gemini-1.5-flash',
+        model: 'gemini-2.0-flash-exp',
         generationConfig: {
           temperature: 0.8,
           maxOutputTokens: 2048,
@@ -995,18 +995,8 @@ Generate exactly ${config.moduleCount} well-structured modules NOW:`;
 
     } catch (error) {
       console.error('❌ Outline generation failed:', error);
-      
-      // Better fallback outline with some structure
-      const topics = config.skills?.length > 0 ? config.skills : 
-        ['Fundamentals', 'Core Concepts', 'Practical Application', 'Advanced Topics', 'Best Practices'];
-      
-      return {
-        modules: Array.from({ length: config.moduleCount }, (_, i) => ({
-          title: `${topics[i] || `Topic ${i + 1}`} of ${config.title}`,
-          description: `Comprehensive coverage of ${topics[i] || 'essential concepts'} with practical examples and real-world applications. Learn key principles and best practices.`,
-          estimatedDuration: `${3 + i}  hours`
-        }))
-      };
+      console.error('❌ CRITICAL: Cannot generate course without AI. Please check Gemini API configuration.');
+      throw new Error(`Failed to generate course outline: ${error.message}`);
     }
   }
 
@@ -1027,12 +1017,23 @@ Generate exactly ${config.moduleCount} well-structured modules NOW:`;
 - Level: ${config.courseContext.level}
 - Number of Lessons: ${config.lessonCount}
 
-**CRITICAL REQUIREMENTS:**
-1. Each lesson MUST have 800-1200 words of DETAILED, EDUCATIONAL content (not placeholders!)
-2. Include REAL YouTube video URLs for each lesson (search for actual educational videos)
-3. Add 3-5 study resource links per lesson (MDN, W3Schools, official docs, tutorials)
-4. Content must be PRACTICAL with code examples, explanations, and real-world applications
-5. Use proper markdown formatting for code blocks and lists
+**CRITICAL REQUIREMENTS FOR VIDEO URLs:**
+⚠️ EXTREMELY IMPORTANT: You MUST provide REAL, WORKING YouTube video URLs!
+- Search your knowledge for ACTUAL educational YouTube videos on this topic
+- Format: "https://www.youtube.com/watch?v=ACTUAL_11_CHAR_VIDEO_ID"
+- Use videos from channels like: freeCodeCamp, Traversy Media, Programming with Mosh, Academind, The Net Ninja
+- If you don't know a specific video, provide your best educational video recommendation for the topic
+- NEVER leave videoUrl empty or use placeholder text
+- Each lesson needs a DIFFERENT relevant video
+
+**OTHER REQUIREMENTS:**
+1. Each lesson MUST have 600-900 words of DETAILED, EDUCATIONAL content
+2. Add 3-5 REAL study resource links per lesson (MDN, W3Schools, official docs, GitHub repos)
+3. Content must be PRACTICAL and informative
+4. Do NOT include code blocks, code examples, or syntax in the content field - describe concepts in plain text only
+5. AVOID special characters in content: no backticks, no curly braces {}, no dollar signs in template examples
+6. When mentioning code syntax, describe it in words (e.g., "use template literals with dollar sign and curly braces" instead of showing code examples)
+7. Keep all content as plain text with simple markdown (headings, lists, bold/italic only)
 
 Return ONLY valid JSON (no markdown code blocks, no extra text):
 
@@ -1045,34 +1046,31 @@ Return ONLY valid JSON (no markdown code blocks, no extra text):
       "title": "Specific, descriptive lesson title",
       "duration": "25-35 minutes",
       "isPreview": false,
-      "videoUrl": "https://www.youtube.com/watch?v=ACTUAL_VIDEO_ID (find REAL educational videos)",
-      "content": "## Introduction\\n\\n[800-1200 words of DETAILED content with examples, explanations, code snippets]\\n\\n## Key Concepts\\n\\n- Concept 1 with explanation\\n- Concept 2 with explanation\\n\\n## Practical Examples\\n\\n\`\`\`javascript\\n// Actual code example\\n\`\`\`\\n\\n## Summary\\n\\n[Comprehensive summary]",
+      "videoUrl": "https://www.youtube.com/watch?v=REAL_VIDEO_ID_HERE",
+      "content": "## Introduction\\n\\nDetailed educational content here. Explain concepts clearly without code blocks.\\n\\n## Key Concepts\\n\\n- First concept with explanation\\n- Second concept\\n\\n## Practical Applications\\n\\nExplain real-world uses.\\n\\n## Summary\\n\\nBrief recap.",
       "resources": [
-        "https://developer.mozilla.org/... (actual MDN link)",
-        "https://www.w3schools.com/... (actual W3Schools link)",
-        "https://github.com/... (actual GitHub repo)",
-        "https://stackoverflow.com/... (relevant Stack Overflow)",
-        "https://... (official documentation)"
+        "https://developer.mozilla.org/en-US/docs/... (REAL MDN link)",
+        "https://www.w3schools.com/... (REAL W3Schools link)",
+        "https://github.com/... (REAL GitHub repo)"
       ]
     }
   ]
 }
 
-**IMPORTANT:** 
-- NO placeholder text like "Detailed content goes here"
-- NO fake URLs like "example.com"
-- Use REAL YouTube videos about the topic
-- Use REAL documentation links
-- Write ACTUAL educational content
-- Include code examples where relevant
+**MANDATORY:**
+- videoUrl: MUST be a real YouTube URL with actual video ID (11 characters)
+- resources: MUST be real, clickable documentation/tutorial links
+- content: MUST be actual educational text (800+ words)
+- NO placeholders, NO fake URLs, NO "example.com"
 
-Generate ${config.lessonCount} complete lessons NOW:`;
+Generate ${config.lessonCount} complete lessons with REAL video URLs NOW:`;
 
       const model = genAI.getGenerativeModel({ 
-        model: 'gemini-1.5-flash',
+        model: 'gemini-2.0-flash-exp',
         generationConfig: {
           temperature: 0.7,
-          maxOutputTokens: 8000, // Increased for detailed content
+          maxOutputTokens: 8000,
+          responseMimeType: "application/json", // Force JSON response
         }
       });
 
@@ -1080,7 +1078,68 @@ Generate ${config.lessonCount} complete lessons NOW:`;
       const response = await result.response;
       let text = response.text().replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
       
-      const moduleData = JSON.parse(text);
+      console.log(`📄 Raw AI response length: ${text.length} characters`);
+      
+      // Try to extract JSON if there's extra text
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        text = jsonMatch[0];
+      }
+
+      // Sanitize problematic characters that break JSON parsing
+      // 1. Remove backticks completely
+      text = text.replace(/`/g, '');
+      
+      // 2. Fix template literal syntax ${...} by removing the ${} wrapper
+      text = text.replace(/\$\{([^}]*)\}/g, '$1');
+      
+      // 3. Fix multiple consecutive single quotes (''' or '' -> ')
+      text = text.replace(/'{2,}/g, "'");
+      
+      // 4. Fix escaped quotes that break JSON
+      text = text.replace(/\\"/g, '"');
+      
+      // 5. Fix any remaining problematic patterns
+      text = text.replace(/'\s*,\s*"/g, "', \"");  // Fix: ' ," -> ', "
+
+      let moduleData;
+      try {
+        moduleData = JSON.parse(text);
+      } catch (parseError) {
+        console.error('❌ JSON Parse Error:', parseError.message);
+        console.error('📄 Problematic section (around error):');
+        const errorPos = parseInt(parseError.message.match(/position (\d+)/)?.[1] || '0');
+        const start = Math.max(0, errorPos - 100);
+        const end = Math.min(text.length, errorPos + 100);
+        console.error(text.substring(start, end));
+        console.error(`        ${' '.repeat(100)}^--- Error at position ${errorPos}`);
+        
+        // Last resort: try to save the content with aggressive sanitization
+        console.log('⚠️  Attempting aggressive sanitization...');
+        try {
+          let sanitized = text;
+          
+          // Step 1: Remove all backslash escapes (they're causing issues)
+          sanitized = sanitized.replace(/\\/g, '');
+          
+          // Step 2: Fix consecutive quotes
+          sanitized = sanitized.replace(/"{2,}/g, '"'); // "" -> "
+          sanitized = sanitized.replace(/'{2,}/g, "'"); // '' -> '
+          
+          // Step 3: Replace parentheses that might contain quotes with safe text
+          sanitized = sanitized.replace(/\(["'`][^)]*["'`]\)/g, '(example)');
+          
+          // Step 4: Remove any remaining problematic patterns
+          sanitized = sanitized.replace(/\(\s*["']\s*\)/g, '(empty)');
+          
+          moduleData = JSON.parse(sanitized);
+          console.log('✅ Recovered with aggressive sanitization!');
+        } catch (finalError) {
+          // If still fails, return a basic fallback module
+          console.error('❌ All sanitization attempts failed');
+          throw new Error(`Invalid JSON from Gemini: ${parseError.message}`);
+        }
+      }
       
       // Ensure first lesson is preview
       if (moduleData.lessons && moduleData.lessons.length > 0) {
@@ -1093,26 +1152,8 @@ Generate ${config.lessonCount} complete lessons NOW:`;
     } catch (error) {
       console.error('❌ Module generation failed:', error);
       console.error('Error details:', error.message);
-      
-      // Better fallback with some real content
-      return {
-        title: config.title,
-        description: config.description,
-        duration: `${config.lessonCount * 30} minutes`,
-        lessons: Array.from({ length: config.lessonCount }, (_, i) => ({
-          title: `${config.title} - Lesson ${i + 1}`,
-          duration: '30 minutes',
-          isPreview: i === 0,
-          videoUrl: `https://www.youtube.com/results?search_query=${encodeURIComponent(config.title + ' tutorial')}`,
-          content: `# ${config.title} - Lesson ${i + 1}\n\n## Overview\n\nThis lesson covers essential concepts of ${config.title}. You'll learn the fundamental principles and practical applications.\n\n## Key Concepts\n\n- Understanding the basics\n- Practical implementation\n- Best practices\n- Common pitfalls to avoid\n\n## Learning Objectives\n\nBy the end of this lesson, you will:\n- Understand core concepts\n- Be able to implement solutions\n- Apply best practices\n\n## Summary\n\nThis lesson provided a foundation in ${config.title}. Continue practicing and exploring the resources provided.`,
-          resources: [
-            'https://developer.mozilla.org/',
-            'https://www.w3schools.com/',
-            'https://github.com/topics',
-            'https://stackoverflow.com/'
-          ]
-        }))
-      };
+      console.error('❌ CRITICAL: Cannot generate module without AI. Please check Gemini API configuration.');
+      throw new Error(`Failed to generate module content: ${error.message}`);
     }
   }
 
@@ -1178,7 +1219,7 @@ Return ONLY valid JSON (no markdown):
 Generate ${config.questionCount} high-quality questions NOW:`;
 
       const model = genAI.getGenerativeModel({ 
-        model: 'gemini-1.5-flash',
+        model: 'gemini-2.0-flash-exp',
         generationConfig: {
           temperature: 0.6,
           maxOutputTokens: 3000,
@@ -1195,58 +1236,8 @@ Generate ${config.questionCount} high-quality questions NOW:`;
 
     } catch (error) {
       console.error('❌ Module quiz generation failed:', error);
-      
-      // Better fallback quiz with some real questions
-      return {
-        title: `${config.moduleTitle} Assessment`,
-        description: `Test your knowledge of ${config.moduleTitle}`,
-        duration: Math.max(15, config.questionCount * 2),
-        passingScore: 70,
-        questions: [
-          {
-            question: `What is the primary purpose of ${config.moduleTitle}?`,
-            type: 'multiple-choice',
-            options: [
-              'To solve specific technical problems',
-              'To provide theoretical knowledge only',
-              'To replace other technologies',
-              'To complicate development processes'
-            ],
-            correctAnswer: 0,
-            explanation: 'This module focuses on practical problem-solving and real-world applications.',
-            difficulty: config.difficulty,
-            points: 10
-          },
-          {
-            question: `Which best practice is most important when working with ${config.moduleTitle}?`,
-            type: 'multiple-choice',
-            options: [
-              'Understanding core concepts before implementation',
-              'Memorizing all syntax',
-              'Using the newest features only',
-              'Avoiding documentation'
-            ],
-            correctAnswer: 0,
-            explanation: 'Understanding fundamentals is crucial for effective implementation and problem-solving.',
-            difficulty: config.difficulty,
-            points: 10
-          },
-          {
-            question: `How would you approach learning ${config.moduleTitle} effectively?`,
-            type: 'multiple-choice',
-            options: [
-              'Combine theory with hands-on practice',
-              'Only read documentation',
-              'Skip basics and start with advanced topics',
-              'Rely solely on tutorials'
-            ],
-            correctAnswer: 0,
-            explanation: 'Effective learning combines theoretical understanding with practical application and experimentation.',
-            difficulty: config.difficulty,
-            points: 10
-          }
-        ].slice(0, config.questionCount)
-      };
+      console.error('❌ CRITICAL: Cannot generate quiz without AI. Please check Gemini API configuration.');
+      throw new Error(`Failed to generate module quiz: ${error.message}`);
     }
   }
 
@@ -1283,7 +1274,7 @@ Return ONLY valid JSON (no markdown) with ${config.questionCount} questions in t
 }`;
 
       const model = genAI.getGenerativeModel({ 
-        model: 'gemini-1.5-flash',
+        model: 'gemini-2.0-flash-exp',
         generationConfig: {
           temperature: 0.6,
           maxOutputTokens: 1536,
@@ -1352,7 +1343,7 @@ Return ONLY valid JSON (no markdown) with enhanced content:
 }`;
 
       const model = genAI.getGenerativeModel({ 
-        model: 'gemini-1.5-flash',
+        model: 'gemini-2.0-flash-exp',
         generationConfig: {
           temperature: 0.7,
           maxOutputTokens: 4096,

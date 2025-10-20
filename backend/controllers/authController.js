@@ -63,6 +63,90 @@ exports.register = async (req, res, next) => {
   }
 };
 
+// Secret registration for instructors and admins
+exports.registerPrivileged = async (req, res, next) => {
+  try {
+    const { name, email, password, role, secretCode } = req.body;
+
+    // Validate required fields
+    if (!name || !email || !password || !role || !secretCode) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide all required fields including secret code',
+      });
+    }
+
+    // Validate role
+    if (role !== 'instructor' && role !== 'admin') {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid role. Only instructor or admin roles allowed.',
+      });
+    }
+
+    // Verify secret codes
+    const ADMIN_SECRET = process.env.ADMIN_SECRET_CODE || 'admin2024secret';
+    const INSTRUCTOR_SECRET = process.env.INSTRUCTOR_SECRET_CODE || 'instructor2024secret';
+
+    if (role === 'admin' && secretCode !== ADMIN_SECRET) {
+      return res.status(403).json({
+        success: false,
+        message: 'Invalid admin secret code',
+      });
+    }
+
+    if (role === 'instructor' && secretCode !== INSTRUCTOR_SECRET) {
+      return res.status(403).json({
+        success: false,
+        message: 'Invalid instructor secret code',
+      });
+    }
+
+    // Check if user exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'User with this email already exists',
+      });
+    }
+
+    // Create user
+    const user = await User.create({
+      name,
+      email,
+      password,
+      role,
+      secretCode, // Store the secret code (hashed with password)
+    });
+
+    // Generate tokens
+    const { accessToken, refreshToken } = generateTokens(user._id);
+
+    // Save refresh token to user
+    user.refreshToken = refreshToken;
+    await user.save();
+
+    res.status(201).json({
+      success: true,
+      message: `${role.charAt(0).toUpperCase() + role.slice(1)} registered successfully`,
+      data: {
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          avatar: user.avatar,
+        },
+        accessToken,
+        refreshToken,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 
 exports.login = async (req, res, next) => {
   try {

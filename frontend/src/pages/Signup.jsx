@@ -1,229 +1,203 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-// eslint-disable-next-line no-unused-vars
+import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { User, Mail, Lock, UserPlus, Eye, EyeOff } from 'lucide-react';
-import useAuthStore from '../store/authStore';
+import { toast } from 'react-hot-toast';
+import api from '../config/api';
 
 const Signup = () => {
   const navigate = useNavigate();
-  const { signup, isAuthenticated, user } = useAuthStore();
-  
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
-    role: 'student',
+    confirmPassword: '',
+    role: 'student', // Default and only option for public signup
   });
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Redirect if already logged in
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      if (user.role === 'admin') {
-        navigate('/admin/dashboard');
-      } else if (user.role === 'instructor') {
-        navigate('/instructor/dashboard');
-      } else {
-        navigate('/dashboard');
-      }
-    }
-  }, [isAuthenticated, user, navigate]);
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+
+    // Validation
+    if (formData.password !== formData.confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+
+    // Force role to be student for public signup
+    const signupData = {
+      ...formData,
+      role: 'student', // Always student for public registration
+    };
+
     setLoading(true);
 
-    const result = await signup(formData.name, formData.email, formData.password, formData.role);
-    
-    if (result.success) {
-      // Navigate based on user role from backend
-      const userRole = result.user?.role || 'student';
-      if (userRole === 'admin') {
-        navigate('/admin/dashboard');
-      } else if (userRole === 'instructor') {
-        navigate('/instructor/dashboard');
-      } else {
+    try {
+      const response = await api.post('/auth/register', signupData);
+
+      // Handle response based on backend structure
+      const userData = response.data.data || response.data;
+      const token = userData.accessToken || response.data.token;
+      const user = userData.user || userData;
+
+      if (token) {
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
+        toast.success('Account created successfully!');
         navigate('/dashboard');
       }
-    } else {
-      setError(result.message);
+    } catch (error) {
+      console.error('Signup error:', error);
+      toast.error(error.response?.data?.message || 'Failed to create account');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-blue-50 py-12 px-4 sm:px-6 lg:px-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
+        className="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-xl"
       >
-        {/* Card */}
-        <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2 }}
-              className="w-20 h-20 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-4"
-            >
-              <UserPlus className="w-10 h-10 text-white" />
-            </motion.div>
-            <h1 className="text-3xl font-bold text-white mb-2">Create Account</h1>
-            <p className="text-gray-400">Join us and start learning today</p>
-          </div>
+        <div>
+          <h2 className="text-center text-3xl font-extrabold text-gray-900">
+            Create your account
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Join our learning community
+          </p>
+        </div>
 
-          {/* Error Message */}
-          {error && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-300 text-sm"
-            >
-              {error}
-            </motion.div>
-          )}
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Name */}
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div className="space-y-4">
+            {/* Name Field */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                 Full Name
               </label>
-              <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  placeholder="John Doe"
-                />
-              </div>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                required
+                value={formData.name}
+                onChange={handleChange}
+                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 rounded-lg placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="John Doe"
+              />
             </div>
 
-            {/* Email */}
+            {/* Email Field */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email Address
               </label>
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="email"
-                  required
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  placeholder="you@example.com"
-                />
-              </div>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                value={formData.email}
+                onChange={handleChange}
+                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 rounded-lg placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="you@example.com"
+              />
             </div>
 
-            {/* Password */}
+            {/* Password Field */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Password
               </label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  minLength={6}
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full pl-12 pr-12 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  placeholder="Minimum 6 characters"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                required
+                value={formData.password}
+                onChange={handleChange}
+                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 rounded-lg placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="••••••••"
+              />
             </div>
 
-            {/* Role */}
+            {/* Confirm Password Field */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                I want to
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                Confirm Password
               </label>
-              <div className="grid grid-cols-3 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, role: 'student' })}
-                  className={`py-3 px-4 rounded-xl font-medium transition-all ${
-                    formData.role === 'student'
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
-                  }`}
-                >
-                  Learn
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, role: 'instructor' })}
-                  className={`py-3 px-4 rounded-xl font-medium transition-all ${
-                    formData.role === 'instructor'
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
-                  }`}
-                >
-                  Teach
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, role: 'admin' })}
-                  className={`py-3 px-4 rounded-xl font-medium transition-all ${
-                    formData.role === 'admin'
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
-                  }`}
-                >
-                  Manage
-                </button>
-              </div>
+              <input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                required
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 rounded-lg placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="••••••••"
+              />
             </div>
 
-            {/* Submit Button */}
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+            {/* REMOVED: Role selection dropdown */}
+            {/* Public signup is ALWAYS for students */}
+            {/* Instructors and admins use /secret-register route */}
+          </div>
+
+          {/* Submit Button */}
+          <div>
+            <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold shadow-lg shadow-purple-500/50 hover:shadow-xl hover:shadow-purple-500/60 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
-              {loading ? 'Creating Account...' : 'Create Account'}
-            </motion.button>
-          </form>
+              {loading ? (
+                <span className="flex items-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Creating account...
+                </span>
+              ) : (
+                'Create Account'
+              )}
+            </button>
+          </div>
 
-          {/* Footer */}
-          <div className="mt-8 text-center">
-            <p className="text-gray-400">
+          {/* Login Link */}
+          <div className="text-center">
+            <p className="text-sm text-gray-600">
               Already have an account?{' '}
-              <Link to="/login" className="text-purple-400 hover:text-purple-300 font-semibold">
-                Sign In
+              <Link to="/login" className="font-medium text-purple-600 hover:text-purple-500">
+                Sign in
               </Link>
             </p>
           </div>
-        </div>
 
-        {/* Back to Home */}
-        <div className="text-center mt-6">
-          <Link to="/" className="text-gray-400 hover:text-white">
-            ← Back to Home
-          </Link>
-        </div>
+          {/* Secret Registration Link (subtle) */}
+          <div className="text-center pt-4 border-t border-gray-200">
+            <p className="text-xs text-gray-400">
+              Staff member?{' '}
+              <Link to="/secret-register" className="text-gray-500 hover:text-gray-700 underline">
+                Access staff registration
+              </Link>
+            </p>
+          </div>
+        </form>
       </motion.div>
     </div>
   );

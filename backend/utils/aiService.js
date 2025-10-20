@@ -33,7 +33,7 @@ const generateQuizQuestions = async (topic, difficulty, questionCount, questionT
   }
 
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
 
     const prompt = `Create ${questionCount} ${difficulty}-level quiz questions about "${topic}".
 
@@ -116,7 +116,7 @@ const generateCourseTemplate = async (category, level, duration) => {
   }
 
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
 
     const prompt = `Create a comprehensive course template for "${category}" at ${level} level.
 
@@ -200,7 +200,7 @@ const generateSkillsBasedCourse = async (skills) => {
   }
 
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
 
     const prompt = `Your task is to:
 1. Analyze a list of technical skills: ${skills.map(s => `"${s}"`).join(', ')}.

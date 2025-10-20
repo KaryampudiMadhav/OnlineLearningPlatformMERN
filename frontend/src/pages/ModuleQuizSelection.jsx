@@ -278,7 +278,7 @@ const ModuleQuizSelection = () => {
         {/* Back Button */}
         <div className="mt-8 text-center">
           <button
-            onClick={() => navigate(`/courses/${courseId}/learn`)}
+            onClick={() => navigate(`/learn/${courseId}`)}
             className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
           >
             Back to Course

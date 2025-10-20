@@ -3,7 +3,7 @@ const Enrollment = require('../models/Enrollment');
 const Course = require('../models/Course');
 const User = require('../models/User');
 
-// Generate certificate for completed course
+// Generate certificate for completed course - Fixed certificateId generation
 exports.generateCertificate = async (req, res) => {
   try {
     const { courseId } = req.params;
@@ -44,7 +44,7 @@ exports.generateCertificate = async (req, res) => {
     }
 
     // Get course and user details
-    const course = await Course.findById(courseId).populate('instructor', 'name');
+    const course = await Course.findById(courseId).populate('instructorId', 'name');
     const user = await User.findById(userId);
 
     // Calculate total lessons
@@ -64,28 +64,29 @@ exports.generateCertificate = async (req, res) => {
     else if (progressPercentage >= 70) grade = 'C';
 
     // Create certificate
-    certificate = await Certificate.create({
+    certificate = new Certificate({
       user: userId,
       course: courseId,
-      completionDate: enrollment.lastAccessedAt || new Date(),
+      completionDate: enrollment.completedAt || new Date(),
       grade,
       verificationUrl: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify-certificate`,
       metadata: {
         courseDuration: course.duration,
         totalLessons,
         completedLessons: enrollment.completedLessons?.length || totalLessons,
-        instructorName: course.instructor?.name || 'Unknown Instructor',
+        instructorName: course.instructorId?.name || course.instructor || 'Unknown Instructor',
       },
     });
+    await certificate.save();
 
     // Populate certificate with user and course details
     certificate = await Certificate.findById(certificate._id)
       .populate('user', 'name email')
-      .populate('course', 'title description category level instructor')
+      .populate('course', 'title description category level instructor instructorId')
       .populate({
         path: 'course',
         populate: {
-          path: 'instructor',
+          path: 'instructorId',
           select: 'name',
         },
       });
@@ -111,11 +112,12 @@ exports.getMyCertificates = async (req, res) => {
     const userId = req.user.id;
 
     const certificates = await Certificate.find({ user: userId })
-      .populate('course', 'title description category level thumbnail instructor')
+      .populate('user', 'name email')
+      .populate('course', 'title description category level thumbnail instructor instructorId')
       .populate({
         path: 'course',
         populate: {
-          path: 'instructor',
+          path: 'instructorId',
           select: 'name',
         },
       })
@@ -143,11 +145,11 @@ exports.getCertificate = async (req, res) => {
 
     const certificate = await Certificate.findById(id)
       .populate('user', 'name email')
-      .populate('course', 'title description category level instructor')
+      .populate('course', 'title description category level instructor instructorId')
       .populate({
         path: 'course',
         populate: {
-          path: 'instructor',
+          path: 'instructorId',
           select: 'name',
         },
       });
@@ -180,11 +182,11 @@ exports.verifyCertificate = async (req, res) => {
 
     const certificate = await Certificate.findOne({ certificateId })
       .populate('user', 'name email')
-      .populate('course', 'title category level instructor')
+      .populate('course', 'title category level instructor instructorId')
       .populate({
         path: 'course',
         populate: {
-          path: 'instructor',
+          path: 'instructorId',
           select: 'name',
         },
       });

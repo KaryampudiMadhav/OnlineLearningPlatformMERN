@@ -17,7 +17,12 @@ import {
   ArrowRight,
   Layers,
   Award,
-  Target
+  Target,
+  Edit3,
+  Link,
+  PlayCircle,
+  Code,
+  FileQuestion
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Navbar from '../components/Navbar';
@@ -169,17 +174,25 @@ const DynamicCourseCreator = () => {
         setGenerationProgress(progress);
         setGenerationStatus(`Generating modules: ${currentModules}/${totalModules}`);
 
-        if (status === 'completed') {
+        if (status === 'completed' || progress >= 100) {
           clearInterval(pollInterval);
           setGenerating(false);
           setGenerationProgress(100);
           setGenerationStatus('Generation complete!');
           
-          // Fetch full course data
-          const courseResponse = await api.get(`/courses/${courseId}`);
-          setCourseData(courseResponse.data.course);
-          
-          toast.success('🎉 Course generated successfully!', { duration: 4000 });
+          // Fetch full course data with all details
+          try {
+            const courseResponse = await api.get(`/courses/${courseId}`);
+            
+            // Handle both possible response structures
+            const course = courseResponse.data.course || courseResponse.data.data || courseResponse.data;
+            setCourseData(course);
+            
+            toast.success('🎉 Course generated successfully!', { duration: 4000 });
+          } catch (fetchError) {
+            console.error('Failed to fetch course data:', fetchError);
+            toast.error('Course generated but failed to load details. Please refresh.');
+          }
         } else if (status === 'failed') {
           clearInterval(pollInterval);
           setGenerating(false);
@@ -204,9 +217,18 @@ const DynamicCourseCreator = () => {
   // View course
   const handleViewCourse = () => {
     if (courseData?._id) {
-      navigate(`/course/${courseData._id}`);
+      navigate(`/courses/${courseData._id}`);
     } else if (generatedCourseId) {
-      navigate(`/course/${generatedCourseId}`);
+      navigate(`/courses/${generatedCourseId}`);
+    }
+  };
+
+  // Edit course
+  const handleEditCourse = () => {
+    if (courseData?._id) {
+      navigate(`/instructor/edit-course/${courseData._id}`);
+    } else if (generatedCourseId) {
+      navigate(`/instructor/edit-course/${generatedCourseId}`);
     }
   };
 
@@ -579,17 +601,26 @@ const DynamicCourseCreator = () => {
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-400">Duration:</span>
-                        <span className="text-white font-bold">{courseData.duration}</span>
+                        <span className="text-white font-bold">{courseData.duration || 'N/A'}</span>
                       </div>
                     </div>
 
-                    <button
-                      onClick={handleViewCourse}
-                      className="w-full py-3 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-lg hover:from-green-700 hover:to-blue-700 transition font-bold flex items-center justify-center gap-2"
-                    >
-                      <Eye size={20} />
-                      View Course
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleViewCourse}
+                        className="flex-1 py-3 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-lg hover:from-green-700 hover:to-blue-700 transition font-bold flex items-center justify-center gap-2"
+                      >
+                        <Eye size={20} />
+                        View Course
+                      </button>
+                      <button
+                        onClick={handleEditCourse}
+                        className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition font-bold flex items-center justify-center gap-2"
+                      >
+                        <Edit3 size={20} />
+                        Edit Course
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -646,6 +677,202 @@ const DynamicCourseCreator = () => {
             </div>
           </div>
         </div>
+
+        {/* Course Content Preview - Shows after generation */}
+        {courseData && courseData.curriculum && courseData.curriculum.length > 0 && (
+          <div className="mt-8 bg-gray-800 rounded-2xl shadow-2xl p-8 border border-green-500/30">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-3xl font-bold text-white flex items-center gap-3">
+                <BookOpen className="text-green-400" size={32} />
+                Generated Course Content
+              </h2>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleEditCourse}
+                  className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium flex items-center gap-2 transition"
+                >
+                  <Edit3 size={18} />
+                  Edit Full Course
+                </button>
+              </div>
+            </div>
+
+            {/* Course Modules */}
+            <div className="space-y-6">
+              {courseData.curriculum.map((module, moduleIndex) => (
+                <div 
+                  key={moduleIndex}
+                  className="bg-gray-700/50 rounded-xl p-6 border border-gray-600 hover:border-purple-500/50 transition"
+                >
+                  {/* Module Header */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="px-3 py-1 bg-purple-600/20 text-purple-300 rounded-full text-sm font-bold">
+                          Module {moduleIndex + 1}
+                        </span>
+                        <h3 className="text-xl font-bold text-white">
+                          {module.moduleTitle || module.title}
+                        </h3>
+                      </div>
+                      {module.moduleDescription && (
+                        <p className="text-gray-300 text-sm mt-2">
+                          {module.moduleDescription}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Lessons */}
+                  {module.lessons && module.lessons.length > 0 && (
+                    <div className="mt-4 space-y-3">
+                      <h4 className="text-white font-semibold flex items-center gap-2 mb-3">
+                        <Layers className="text-blue-400" size={18} />
+                        Lessons ({module.lessons.length})
+                      </h4>
+                      
+                      {module.lessons.map((lesson, lessonIndex) => (
+                        <div 
+                          key={lessonIndex}
+                          className="bg-gray-800/70 rounded-lg p-4 border border-gray-600"
+                        >
+                          <div className="flex items-start gap-3">
+                            <span className="flex-shrink-0 w-8 h-8 bg-blue-600/20 text-blue-300 rounded-full flex items-center justify-center text-sm font-bold">
+                              {lessonIndex + 1}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <h5 className="text-white font-medium mb-2">
+                                {lesson.title}
+                              </h5>
+                              
+                              {/* Lesson Content Preview */}
+                              {lesson.content && (
+                                <div className="mb-3">
+                                  <p className="text-gray-400 text-sm line-clamp-3">
+                                    {lesson.content.substring(0, 200)}...
+                                  </p>
+                                  <span className="text-xs text-green-400 mt-1 inline-block">
+                                    ✓ {lesson.content.split(' ').length} words generated
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* Video URL */}
+                              {lesson.videoUrl && (
+                                <div className="flex items-center gap-2 mb-2">
+                                  <PlayCircle className="text-red-400" size={16} />
+                                  <a 
+                                    href={lesson.videoUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-400 hover:text-blue-300 text-sm truncate"
+                                  >
+                                    {lesson.videoUrl}
+                                  </a>
+                                </div>
+                              )}
+
+                              {/* Resources/Documentation */}
+                              {lesson.resources && lesson.resources.length > 0 && (
+                                <div className="mt-2">
+                                  <p className="text-gray-400 text-xs mb-1 flex items-center gap-1">
+                                    <Link size={14} />
+                                    Study Resources:
+                                  </p>
+                                  <div className="flex flex-wrap gap-2">
+                                    {lesson.resources.map((resource, idx) => (
+                                      <a
+                                        key={idx}
+                                        href={resource.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="px-2 py-1 bg-blue-600/20 text-blue-300 rounded text-xs hover:bg-blue-600/30 transition"
+                                        title={resource.title}
+                                      >
+                                        {resource.title || resource.type || `Resource ${idx + 1}`}
+                                      </a>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Code Examples */}
+                              {lesson.codeExamples && lesson.codeExamples.length > 0 && (
+                                <div className="mt-2 flex items-center gap-2 text-xs">
+                                  <Code className="text-green-400" size={14} />
+                                  <span className="text-green-400">
+                                    {lesson.codeExamples.length} code example{lesson.codeExamples.length > 1 ? 's' : ''}
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* Duration */}
+                              {lesson.duration && (
+                                <div className="mt-2 flex items-center gap-2 text-xs text-gray-400">
+                                  <Clock size={14} />
+                                  {lesson.duration} mins
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Module Quiz */}
+                  {module.quiz && module.quiz.questions && module.quiz.questions.length > 0 && (
+                    <div className="mt-4 bg-yellow-600/10 border border-yellow-600/30 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <FileQuestion className="text-yellow-400" size={18} />
+                        <h4 className="text-white font-semibold">
+                          Module Quiz ({module.quiz.questions.length} questions)
+                        </h4>
+                      </div>
+                      <div className="space-y-2 text-sm">
+                        {module.quiz.questions.slice(0, 2).map((q, idx) => (
+                          <div key={idx} className="text-gray-300">
+                            <span className="text-yellow-400 font-medium">{idx + 1}.</span> {q.question}
+                          </div>
+                        ))}
+                        {module.quiz.questions.length > 2 && (
+                          <p className="text-gray-400 text-xs">
+                            + {module.quiz.questions.length - 2} more questions
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="mt-8 flex gap-4 justify-center">
+              <button
+                onClick={handleViewCourse}
+                className="px-8 py-3 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white rounded-lg font-bold flex items-center gap-2 transition shadow-lg"
+              >
+                <Eye size={20} />
+                View Full Course
+              </button>
+              <button
+                onClick={handleEditCourse}
+                className="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg font-bold flex items-center gap-2 transition shadow-lg"
+              >
+                <Edit3 size={20} />
+                Edit & Customize
+              </button>
+              <button
+                onClick={handleReset}
+                className="px-8 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-bold flex items-center gap-2 transition"
+              >
+                <RefreshCw size={20} />
+                Create Another
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

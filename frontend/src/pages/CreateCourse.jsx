@@ -254,8 +254,16 @@ const CreateCourse = () => {
         videoUrl: lesson.videoUrl || '',
         content: lesson.content
       })),
-      // Include quiz recommendation (use existing or generate instantly)
-      quizRecommendation: module.quizRecommendation || generateInstantQuiz(module.title)
+      // Convert quiz recommendation to actual quiz object
+      quiz: module.quizRecommendation ? {
+        title: module.quizRecommendation.title,
+        description: module.quizRecommendation.description,
+        duration: module.quizRecommendation.duration || 15,
+        passingScore: module.quizRecommendation.passingScore || 70,
+        questions: module.quizRecommendation.questions,
+        difficulty: module.quizRecommendation.difficulty || 'intermediate',
+        isActive: true
+      } : null
     }));
 
     setFormData(prev => ({
@@ -263,7 +271,7 @@ const CreateCourse = () => {
       curriculum: [...prev.curriculum, ...newCurriculum]
     }));
     
-    toast.success(`Generated ${modules.length} modules with instant quiz recommendations!`);
+    toast.success(`Generated ${modules.length} modules with quizzes!`);
   };
 
   const handleSubmit = async (e) => {

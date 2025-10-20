@@ -65,6 +65,10 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    secretCode: {
+      type: String,
+      select: false, // Don't return in queries
+    },
   },
   {
     timestamps: true,

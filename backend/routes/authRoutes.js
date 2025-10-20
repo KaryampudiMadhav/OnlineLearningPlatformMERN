@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {
   register,
+  registerPrivileged,
   login,
   refreshToken,
   logout,
@@ -12,6 +13,7 @@ const { validateRegister, validateLogin } = require('../middlewares/validateRequ
 
 // Public routes
 router.post('/register', validateRegister, register);
+router.post('/register-privileged', registerPrivileged); // Secret route for admin/instructor
 router.post('/login', validateLogin, login);
 router.post('/refresh', refreshToken);
 

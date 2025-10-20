@@ -101,52 +101,49 @@ const generateDynamicCourseFunction = inngest.createFunction(
       }
     }
 
-    // Step 4: Generate quizzes if requested
+    // Step 4: Generate quizzes if requested and embed them in modules
     let quizzes = [];
     if (includeQuizzes) {
-      quizzes = await step.run('generate-all-quizzes', async () => {
-        const quizPromises = generatedModules.map(async (module, index) => {
+      quizzes = await step.run('generate-and-embed-quizzes', async () => {
+        const course = await Course.findById(courseId);
+        let successCount = 0;
+
+        for (let index = 0; index < generatedModules.length; index++) {
           try {
-            console.log(`📝 Generating quiz for module: ${module.title}`);
+            const module = generatedModules[index];
+            console.log(`📝 Generating quiz for module ${index + 1}: ${module.title}`);
             
             const quizData = await intelligentAIService.generateModuleQuiz({
               moduleTitle: module.title,
               moduleDescription: module.description,
               lessons: module.lessons,
               difficulty: config.level,
-              questionCount: 5
+              questionCount: 8
             });
 
-            const quiz = await Quiz.create({
-              course: courseId,
-              quizType: 'module',
-              moduleIndex: index,
-              moduleTitle: module.title,
-              title: quizData.title,
-              description: quizData.description,
+            // Embed quiz directly in the module
+            course.curriculum[index].quiz = {
+              title: quizData.title || `${module.title} Quiz`,
+              description: quizData.description || `Test your understanding of ${module.title}`,
               duration: quizData.duration || 15,
               passingScore: quizData.passingScore || 70,
               questions: quizData.questions,
-              difficulty: config.level,
-              createdBy: userId,
-              metadata: {
-                aiGenerated: true,
-                generatedAt: new Date()
-              }
-            });
+              difficulty: config.level.toLowerCase(),
+              isActive: true
+            };
 
-            console.log(`✅ Quiz generated for module: ${module.title}`);
-            return quiz;
+            successCount++;
+            console.log(`✅ Quiz embedded in module ${index + 1}: ${module.title}`);
           } catch (error) {
             console.error(`❌ Quiz generation failed for module ${index}:`, error);
-            return null;
           }
-        });
+        }
 
-        const results = await Promise.allSettled(quizPromises);
-        return results
-          .filter(r => r.status === 'fulfilled' && r.value)
-          .map(r => r.value);
+        // Save course with embedded quizzes
+        await course.save();
+        console.log(`✅ ${successCount} quizzes embedded in course modules`);
+        
+        return successCount;
       });
 
       // Update progress to 100%
@@ -166,13 +163,16 @@ const generateDynamicCourseFunction = inngest.createFunction(
           'metadata.generationStatus': 'completed',
           'metadata.generationCompleted': new Date(),
           'metadata.modulesGenerated': generatedModules.length,
-          'metadata.quizzesGenerated': quizzes.length,
+          'metadata.quizzesGenerated': quizzes, // This is now the count
           'metadata.progressPercentage': 100
         },
         { new: true }
       );
 
       console.log(`🎉 Course generation completed: ${course.title}`);
+      console.log(`   📚 Modules: ${generatedModules.length}`);
+      console.log(`   📝 Lessons: ${generatedModules.reduce((sum, m) => sum + m.lessons.length, 0)}`);
+      console.log(`   ❓ Quizzes: ${quizzes}`);
       return course;
     });
 
@@ -187,7 +187,7 @@ const generateDynamicCourseFunction = inngest.createFunction(
           stats: {
             modulesGenerated: generatedModules.length,
             lessonsGenerated: generatedModules.reduce((sum, m) => sum + m.lessons.length, 0),
-            quizzesGenerated: quizzes.length
+            quizzesGenerated: quizzes // Now shows actual count
           }
         }
       });
@@ -198,7 +198,7 @@ const generateDynamicCourseFunction = inngest.createFunction(
       course: finalCourse,
       stats: {
         modulesGenerated: generatedModules.length,
-        quizzesGenerated: quizzes.length,
+        quizzesGenerated: quizzes, // Now the count, not array
         processingTime: Date.now() - event.ts
       }
     };

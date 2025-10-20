@@ -216,7 +216,29 @@ const courseSchema = new mongoose.Schema(
         type: Boolean,
         default: false
       },
-      lastImproved: Date
+      lastImproved: Date,
+      // Dynamic course generation metadata
+      generationStatus: {
+        type: String,
+        enum: ['pending', 'generating', 'completed', 'failed', 'unknown'],
+        default: 'pending'
+      },
+      generationStarted: Date,
+      generationCompleted: Date,
+      requestedModules: Number,
+      requestedLessons: Number,
+      modulesGenerated: Number,
+      quizzesGenerated: Number,
+      progressPercentage: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 100
+      },
+      failureReason: String,
+      skills: [String],
+      aiEnhanced: Boolean,
+      lastEnhanced: Date
     },
   },
   {

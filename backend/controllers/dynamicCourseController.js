@@ -154,7 +154,7 @@ exports.getCourseGenerationStatus = async (req, res, next) => {
       ? Math.round((currentModules / requestedModules) * 100) 
       : 0;
 
-    res.json({
+    const responseData = {
       success: true,
       status: course.metadata?.generationStatus || 'unknown',
       progress,
@@ -166,7 +166,12 @@ exports.getCourseGenerationStatus = async (req, res, next) => {
         modulesGenerated: currentModules,
         isComplete: course.metadata?.generationStatus === 'completed'
       }
-    });
+    };
+
+    // Debug log to see what we're returning
+    console.log(`📊 Status check for ${course.title}: status="${responseData.status}", progress=${responseData.progress}%`);
+
+    res.json(responseData);
 
   } catch (error) {
     console.error('Status check error:', error);

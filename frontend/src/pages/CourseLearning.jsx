@@ -24,6 +24,45 @@ const CourseLearning = () => {
   const [expandedSections, setExpandedSections] = useState({});
   const [completingLesson, setCompletingLesson] = useState(false);
 
+  // Convert YouTube URL to embeddable format
+  const getEmbedUrl = (url) => {
+    if (!url) return null;
+    
+    try {
+      // Already in embed format
+      if (url.includes('/embed/')) {
+        return url;
+      }
+      
+      // Extract video ID from various YouTube URL formats
+      let videoId = null;
+      
+      // Format: https://www.youtube.com/watch?v=VIDEO_ID
+      if (url.includes('watch?v=')) {
+        videoId = url.split('watch?v=')[1]?.split('&')[0];
+      }
+      // Format: https://youtu.be/VIDEO_ID
+      else if (url.includes('youtu.be/')) {
+        videoId = url.split('youtu.be/')[1]?.split('?')[0];
+      }
+      // Format: https://www.youtube.com/v/VIDEO_ID
+      else if (url.includes('/v/')) {
+        videoId = url.split('/v/')[1]?.split('?')[0];
+      }
+      
+      // If we extracted a video ID, return embed URL
+      if (videoId) {
+        return `https://www.youtube.com/embed/${videoId}`;
+      }
+      
+      // If URL doesn't match any pattern, return as is (might be other video platform)
+      return url;
+    } catch (error) {
+      console.error('Error converting video URL:', error);
+      return url;
+    }
+  };
+
   const fetchCourseAndEnrollment = useCallback(async () => {
     try {
       setLoading(true);
@@ -272,10 +311,11 @@ const CourseLearning = () => {
               {currentLesson?.lesson.videoUrl ? (
                 <div className="aspect-video bg-black">
                   <iframe
-                    src={currentLesson.lesson.videoUrl.replace('watch?v=', 'embed/')}
+                    src={getEmbedUrl(currentLesson.lesson.videoUrl)}
                     className="w-full h-full"
                     allowFullScreen
                     title={currentLesson.lesson.title}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   />
                 </div>
               ) : (

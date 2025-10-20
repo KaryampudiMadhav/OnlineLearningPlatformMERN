@@ -5,6 +5,7 @@ import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import SecretRegister from './pages/SecretRegister';
 import Courses from './pages/Courses';
 import CourseDetail from './pages/CourseDetail';
 import CourseLearning from './pages/CourseLearning';
@@ -88,6 +89,7 @@ const App = () => {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/secret-register" element={<SecretRegister />} />
             <Route path="/courses" element={<Courses />} />
             <Route path="/courses/:id" element={<CourseDetail />} />
             <Route path="/courses/:courseId/reviews" element={<CourseReviews />} />
