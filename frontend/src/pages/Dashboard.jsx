@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
 import { 
   BookOpen, TrendingUp, Award, Clock, 
   Star, BarChart, Target, Zap, Loader2
@@ -8,6 +9,7 @@ import {
 import { Link } from 'react-router-dom';
 import api from '../config/api';
 import useAuthStore from '../store/authStore';
+import AISupportChatbot from '../components/AISupportChatbot';
 
 const Dashboard = () => {
   const { user } = useAuthStore();
@@ -140,6 +142,9 @@ const Dashboard = () => {
           )}
         </motion.div>
       </div>
+
+      {/* AI Support Chatbot */}
+      <AISupportChatbot />
     </div>
   );
 };
@@ -154,15 +159,16 @@ const CourseCard = ({ enrollment, index }) => {
   const handleGenerateCertificate = async () => {
     try {
       setGeneratingCert(true);
-      await api.post(`/certificates/generate/${enrollment._id}`);
+      await api.post(`/certificates/generate/${course._id}`);
       setCertificateGenerated(true);
+      toast.success('Certificate generated successfully!');
       // Redirect to certificates page after a brief delay
       setTimeout(() => {
         window.location.href = '/my-certificates';
       }, 1500);
     } catch (error) {
       console.error('Failed to generate certificate:', error);
-      alert(error.response?.data?.message || 'Failed to generate certificate');
+      toast.error(error.response?.data?.message || 'Failed to generate certificate');
     } finally {
       setGeneratingCert(false);
     }

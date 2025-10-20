@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { 
   Trophy, Star, Clock, CheckCircle, Lock, Flame, 
   BookOpen, MessageSquare, Award, Target, Zap
@@ -49,7 +50,7 @@ const DailyChallenges = () => {
       }
     } catch (error) {
       console.error('Error completing challenge:', error);
-      alert(error.response?.data?.message || 'Failed to complete challenge');
+      toast.error(error.response?.data?.message || 'Failed to complete challenge');
     } finally {
       setCompletingChallenge(null);
     }

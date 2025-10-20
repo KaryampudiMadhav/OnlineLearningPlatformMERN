@@ -33,8 +33,8 @@ const Navbar = () => {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-white/10">
-      <div className="container mx-auto max-w-7xl px-4">
-        <div className="flex items-center justify-between h-16">
+      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 gap-4">{/* Added gap-4 for better spacing */}
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
             <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -44,12 +44,12 @@ const Navbar = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-6 lg:gap-8">{/* Responsive gap spacing */}
             {navLinks.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
-                className={`text-sm font-medium transition-colors relative ${
+                className={`text-sm font-medium transition-colors relative px-2 py-1 ${
                   isActive(link.path) ? 'text-white' : 'text-gray-400 hover:text-white'
                 }`}
               >
@@ -57,7 +57,7 @@ const Navbar = () => {
                 {isActive(link.path) && (
                   <motion.div
                     layoutId="navbar-indicator"
-                    className="absolute -bottom-[21px] left-0 right-0 h-0.5 bg-gradient-to-r from-purple-600 to-pink-600"
+                    className="absolute -bottom-[17px] left-0 right-0 h-0.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full"
                   />
                 )}
               </Link>
@@ -65,7 +65,7 @@ const Navbar = () => {
           </div>
 
           {/* Desktop Auth Buttons */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-2 lg:gap-3">{/* Responsive gap spacing */}
             {isAuthenticated ? (
               <>
                 <Link to={
@@ -82,6 +82,18 @@ const Navbar = () => {
                     Dashboard
                   </motion.button>
                 </Link>
+                {(user?.role === 'instructor' || user?.role === 'admin') && (
+                  <Link to="/instructor/content-hub">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="flex items-center gap-2 px-4 py-2 text-white hover:text-purple-400 transition-colors"
+                    >
+                      <BookOpen className="w-4 h-4" />
+                      Content Hub
+                    </motion.button>
+                  </Link>
+                )}
                 {user?.role === 'student' && (
                   <>
                     <Link to="/my-certificates">
@@ -106,11 +118,11 @@ const Navbar = () => {
                     </Link>
                   </>
                 )}
-                <div className="flex items-center gap-3 px-4 py-2 bg-white/5 rounded-full border border-white/10">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-full border border-white/10">{/* Better padding and size */}
                   <User className="w-4 h-4 text-purple-400" />
-                  <span className="text-sm text-white">{user?.name}</span>
+                  <span className="text-sm text-white truncate max-w-24">{user?.name}</span>{/* Prevent overflow with truncate */}
                   {user?.role && (
-                    <span className="text-xs px-2 py-0.5 bg-purple-500/30 text-purple-300 rounded-full">
+                    <span className="text-xs px-2 py-0.5 bg-purple-500/30 text-purple-300 rounded-full whitespace-nowrap">
                       {user.role}
                     </span>
                   )}
@@ -119,10 +131,10 @@ const Navbar = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={handleLogout}
-                  className="flex items-center gap-2 px-4 py-2 bg-red-500/20 text-red-300 rounded-full hover:bg-red-500/30 transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/20 text-red-300 rounded-full hover:bg-red-500/30 transition-colors text-sm"
                 >
                   <LogOut className="w-4 h-4" />
-                  Logout
+                  <span className="hidden lg:inline">Logout</span>{/* Hide text on medium screens */}
                 </motion.button>
               </>
             ) : (

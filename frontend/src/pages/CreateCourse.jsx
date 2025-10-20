@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { BookOpen, DollarSign, Upload, Plus, X, Save } from 'lucide-react';
 import api from '../config/api';
+import AIModuleGenerator from '../components/AIModuleGenerator';
 
 const CreateCourse = () => {
   const navigate = useNavigate();
@@ -78,9 +80,23 @@ const CreateCourse = () => {
   const handleCurriculumChange = (sectionIndex, field, value) => {
     setFormData(prev => ({
       ...prev,
-      curriculum: prev.curriculum.map((section, i) => 
-        i === sectionIndex ? { ...section, [field]: value } : section
-      )
+      curriculum: prev.curriculum.map((section, i) => {
+        if (i === sectionIndex) {
+          const updatedSection = { ...section, [field]: value };
+          
+          // Auto-generate quiz recommendation when title is updated and has meaningful content
+          if (field === 'title' && value.trim().length > 3 && !section.quizRecommendation) {
+            updatedSection.quizRecommendation = generateInstantQuiz(value.trim());
+            // Show notification for instant quiz generation
+            setTimeout(() => {
+              toast.success(`Auto-generated quiz for "${value.trim()}"!`);
+            }, 500);
+          }
+          
+          return updatedSection;
+        }
+        return section;
+      })
     }));
   };
 
@@ -108,7 +124,8 @@ const CreateCourse = () => {
         title: '',
         description: '',
         duration: '',
-        lessons: [{ title: '', duration: '', isPreview: false, videoUrl: '', content: '' }]
+        lessons: [{ title: '', duration: '', isPreview: false, videoUrl: '', content: '' }],
+        quizRecommendation: null // Will be generated when title is filled
       }]
     }));
   };
@@ -150,6 +167,113 @@ const CreateCourse = () => {
     }));
   };
 
+  // Function to generate instant quiz recommendations
+  const generateInstantQuiz = (moduleTitle) => {
+    const topics = [
+      'Core concepts and fundamentals',
+      'Practical applications',
+      'Best practices',
+      'Implementation details',
+      'Real-world examples'
+    ];
+    
+    // Generate sample questions
+    const questions = [
+      {
+        question: `What are the key concepts covered in "${moduleTitle}"?`,
+        options: [
+          { text: 'Fundamental principles and core theory', isCorrect: true },
+          { text: 'Advanced optimization techniques only', isCorrect: false },
+          { text: 'Historical background information', isCorrect: false },
+          { text: 'Unrelated supplementary material', isCorrect: false }
+        ],
+        explanation: `Understanding the key concepts in "${moduleTitle}" is essential for building a strong foundation.`
+      },
+      {
+        question: `Which approach is most effective when learning "${moduleTitle}"?`,
+        options: [
+          { text: 'Memorizing definitions without understanding', isCorrect: false },
+          { text: 'Combining theoretical study with practical application', isCorrect: true },
+          { text: 'Skipping foundational concepts', isCorrect: false },
+          { text: 'Only focusing on advanced topics', isCorrect: false }
+        ],
+        explanation: 'The most effective learning combines theoretical understanding with hands-on practice.'
+      },
+      {
+        question: `How does "${moduleTitle}" apply to real-world scenarios?`,
+        options: [
+          { text: 'It has no practical applications', isCorrect: false },
+          { text: 'It only applies to theoretical situations', isCorrect: false },
+          { text: 'It provides practical solutions and frameworks', isCorrect: true },
+          { text: 'It only works in controlled environments', isCorrect: false }
+        ],
+        explanation: 'The concepts in this module are designed to be applied in real-world situations and scenarios.'
+      },
+      {
+        question: `What should you focus on to master "${moduleTitle}"?`,
+        options: [
+          { text: 'Surface-level memorization', isCorrect: false },
+          { text: 'Deep understanding and practical skills', isCorrect: true },
+          { text: 'Speed over comprehension', isCorrect: false },
+          { text: 'Avoiding challenging exercises', isCorrect: false }
+        ],
+        explanation: 'Mastery requires both deep understanding of concepts and the ability to apply them effectively.'
+      },
+      {
+        question: `How can you validate your understanding of "${moduleTitle}"?`,
+        options: [
+          { text: 'By repeating definitions word-for-word', isCorrect: false },
+          { text: 'By avoiding practical exercises', isCorrect: false },
+          { text: 'By applying concepts to solve problems', isCorrect: true },
+          { text: 'By memorizing examples without understanding', isCorrect: false }
+        ],
+        explanation: 'True understanding is demonstrated through the ability to apply learned concepts to solve new problems.'
+      }
+    ];
+    
+    return {
+      title: `${moduleTitle} - Assessment Quiz`,
+      description: `Comprehensive quiz covering key concepts from ${moduleTitle}`,
+      questionCount: questions.length,
+      timeLimit: 15,
+      difficulty: 'intermediate',
+      topics: [moduleTitle, ...topics.slice(0, 3)],
+      questions: questions
+    };
+  };
+
+  const handleAIModulesGenerated = (modules) => {
+    const newCurriculum = modules.map(module => ({
+      title: module.title,
+      description: module.description,
+      duration: '30 minutes', // Default duration
+      lessons: module.lessons.map(lesson => ({
+        title: lesson.title,
+        duration: lesson.duration || '15 minutes',
+        isPreview: false,
+        videoUrl: lesson.videoUrl || '',
+        content: lesson.content
+      })),
+      // Convert quiz recommendation to actual quiz object
+      quiz: module.quizRecommendation ? {
+        title: module.quizRecommendation.title,
+        description: module.quizRecommendation.description,
+        duration: module.quizRecommendation.duration || 15,
+        passingScore: module.quizRecommendation.passingScore || 70,
+        questions: module.quizRecommendation.questions,
+        difficulty: module.quizRecommendation.difficulty || 'intermediate',
+        isActive: true
+      } : null
+    }));
+
+    setFormData(prev => ({
+      ...prev,
+      curriculum: [...prev.curriculum, ...newCurriculum]
+    }));
+    
+    toast.success(`Generated ${modules.length} modules with quizzes!`);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -168,10 +292,13 @@ const CreateCourse = () => {
       const response = await api.post('/courses', cleanedData);
       
       if (response.data.success) {
+        toast.success('Course created successfully with module quizzes!');
         navigate('/instructor/dashboard');
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create course');
+      const errorMessage = err.response?.data?.message || 'Failed to create course';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -417,6 +544,12 @@ const CreateCourse = () => {
               <h2 className="text-xl font-bold text-white border-b border-slate-700 pb-2">
                 Curriculum
               </h2>
+              
+              {/* AI Module Generator */}
+              <AIModuleGenerator 
+                onModulesGenerated={handleAIModulesGenerated}
+                existingModules={formData.curriculum}
+              />
               {formData.curriculum.map((section, sectionIndex) => (
                 <div key={sectionIndex} className="bg-slate-700/50 p-6 rounded-xl space-y-4">
                   <div className="flex justify-between items-start gap-4">
@@ -509,6 +642,105 @@ const CreateCourse = () => {
                     >
                       <Plus className="w-3 h-3" /> Add Lesson
                     </button>
+
+                    {/* Quiz Recommendation (if available) */}
+                    {section.quizRecommendation && (
+                      <div className="mt-4 p-4 bg-gradient-to-r from-green-600/20 to-blue-600/20 border border-green-500/30 rounded-lg">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                            <span className="text-white text-sm font-bold">?</span>
+                          </div>
+                          <h4 className="font-semibold text-green-300">Recommended Quiz</h4>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <h5 className="font-medium text-white">{section.quizRecommendation.title}</h5>
+                          <p className="text-gray-300 text-sm">{section.quizRecommendation.description}</p>
+                          
+                          <div className="flex flex-wrap gap-4 text-sm text-gray-300">
+                            <span className="flex items-center gap-1">
+                              <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
+                              {section.quizRecommendation.questionCount} Questions
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <span className="w-2 h-2 bg-green-400 rounded-full"></span>
+                              {section.quizRecommendation.duration} Minutes
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <span className="w-2 h-2 bg-purple-400 rounded-full"></span>
+                              {section.quizRecommendation.difficulty} Level
+                            </span>
+                          </div>
+                          
+                          {section.quizRecommendation.topics && (
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {section.quizRecommendation.topics.slice(0, 4).map((topic, idx) => (
+                                <span key={idx} className="px-2 py-1 bg-blue-600/30 text-blue-300 rounded-full text-xs">
+                                  {topic}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                          
+                          <div className="flex gap-2 mt-3">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                // TODO: Navigate to create quiz with pre-filled data
+                                toast(`Quiz: ${section.quizRecommendation.title} - Will be created automatically!`);
+                              }}
+                              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors"
+                            >
+                              Create This Quiz
+                            </button>
+                            
+                            <button
+                              type="button"
+                              onClick={() => {
+                                // Regenerate quiz recommendation
+                                const updatedCurriculum = [...formData.curriculum];
+                                updatedCurriculum[sectionIndex].quizRecommendation = generateInstantQuiz(section.title);
+                                setFormData(prev => ({
+                                  ...prev,
+                                  curriculum: updatedCurriculum
+                                }));
+                                toast.success(`Regenerated quiz for "${section.title}"!`);
+                              }}
+                              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors"
+                            >
+                              Regenerate Quiz
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Add Quiz Recommendation Button (if no quiz exists and title is filled) */}
+                    {!section.quizRecommendation && section.title.trim().length > 3 && (
+                      <div className="mt-4 p-4 bg-gradient-to-r from-purple-600/20 to-blue-600/20 border border-purple-500/30 rounded-lg">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="font-semibold text-purple-300 mb-1">Generate Quiz Recommendation</h4>
+                            <p className="text-gray-400 text-sm">Create an assessment quiz for this module</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updatedCurriculum = [...formData.curriculum];
+                              updatedCurriculum[sectionIndex].quizRecommendation = generateInstantQuiz(section.title);
+                              setFormData(prev => ({
+                                ...prev,
+                                curriculum: updatedCurriculum
+                              }));
+                              toast.success(`Generated quiz for "${section.title}"!`);
+                            }}
+                            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors"
+                          >
+                            Generate Quiz
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -519,6 +751,45 @@ const CreateCourse = () => {
               >
                 <Plus className="w-4 h-4" /> Add Section
               </button>
+
+              {/* Quiz Summary */}
+              {formData.curriculum.some(section => section.quizRecommendation) && (
+                <div className="mt-8 p-6 bg-gradient-to-r from-indigo-600/20 to-purple-600/20 border border-indigo-500/30 rounded-xl">
+                  <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <div className="w-6 h-6 bg-indigo-500 rounded-lg flex items-center justify-center">
+                      <span className="text-white text-sm font-bold">📝</span>
+                    </div>
+                    Quiz Recommendations Summary
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {formData.curriculum.map((section, index) => (
+                      section.quizRecommendation && (
+                        <div key={index} className="bg-slate-700/50 rounded-lg p-4">
+                          <div className="flex justify-between items-start mb-2">
+                            <h4 className="font-medium text-white text-sm">{section.quizRecommendation.title}</h4>
+                            <span className="text-xs text-indigo-400 bg-indigo-600/20 px-2 py-1 rounded">
+                              Module {index + 1}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-4 text-xs text-gray-400">
+                            <span>{section.quizRecommendation.questionCount}Q</span>
+                            <span>{section.quizRecommendation.duration}min</span>
+                            <span className="capitalize">{section.quizRecommendation.difficulty}</span>
+                          </div>
+                        </div>
+                      )
+                    ))}
+                  </div>
+                  
+                  <div className="mt-4 p-3 bg-blue-600/10 border border-blue-500/20 rounded-lg">
+                    <p className="text-blue-300 text-sm">
+                      💡 <strong>Tip:</strong> AI-generated quiz recommendations help you assess student understanding after each module. 
+                      You can create these quizzes individually or use our bulk quiz generator.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Submit Buttons */}

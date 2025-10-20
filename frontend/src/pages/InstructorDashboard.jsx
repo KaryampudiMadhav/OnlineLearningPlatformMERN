@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { 
   BookOpen, Users, TrendingUp, DollarSign, 
   Plus, Edit, Trash2, Loader2, Star, Clock,
@@ -17,16 +18,15 @@ const InstructorDashboard = () => {
 
   useEffect(() => {
     fetchInstructorCourses();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchInstructorCourses = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/courses?instructor=${user?._id}`);
+      const response = await api.get('/courses/instructor/my-courses');
       setCourses(response.data.courses || []);
     } catch (error) {
-      console.error('Failed to fetch courses:', error);
+      console.error('Failed to fetch instructor courses:', error);
       setCourses([]);
     } finally {
       setLoading(false);
@@ -39,9 +39,9 @@ const InstructorDashboard = () => {
     try {
       await api.delete(`/courses/${courseId}`);
       setCourses(courses.filter(c => c._id !== courseId));
-      alert('Course deleted successfully');
+      toast.success('Course deleted successfully');
     } catch (error) {
-      alert('Failed to delete course');
+      toast.error('Failed to delete course');
     }
   };
 
@@ -128,6 +128,57 @@ const InstructorDashboard = () => {
           ))}
         </div>
 
+        {/* Content Generation Quick Actions */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="mb-12"
+        >
+          <h3 className="text-2xl font-bold text-white mb-6">Content Creation Tools</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Link to="/instructor/content-hub">
+              <div className="bg-gradient-to-br from-blue-500/20 to-purple-500/20 backdrop-blur-lg border border-white/20 rounded-xl p-4 hover:border-blue-500/50 transition-all group">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                  <TrendingUp className="w-5 h-5 text-white" />
+                </div>
+                <h4 className="font-semibold text-white mb-1">Content Hub</h4>
+                <p className="text-gray-400 text-sm">All creation tools in one place</p>
+              </div>
+            </Link>
+            
+            <Link to="/instructor/content-hub/templates">
+              <div className="bg-gradient-to-br from-green-500/20 to-blue-500/20 backdrop-blur-lg border border-white/20 rounded-xl p-4 hover:border-green-500/50 transition-all group">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500 to-blue-500 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                  <BookOpen className="w-5 h-5 text-white" />
+                </div>
+                <h4 className="font-semibold text-white mb-1">Course Templates</h4>
+                <p className="text-gray-400 text-sm">Pre-built course structures</p>
+              </div>
+            </Link>
+            
+            <Link to="/instructor/content-hub/bulk-import">
+              <div className="bg-gradient-to-br from-orange-500/20 to-red-500/20 backdrop-blur-lg border border-white/20 rounded-xl p-4 hover:border-orange-500/50 transition-all group">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                  <BarChart3 className="w-5 h-5 text-white" />
+                </div>
+                <h4 className="font-semibold text-white mb-1">Bulk Import</h4>
+                <p className="text-gray-400 text-sm">Upload quizzes via CSV</p>
+              </div>
+            </Link>
+            
+            <Link to="/instructor/content-hub/ai-quiz">
+              <div className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-lg border border-white/20 rounded-xl p-4 hover:border-purple-500/50 transition-all group">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                  <Star className="w-5 h-5 text-white" />
+                </div>
+                <h4 className="font-semibold text-white mb-1">AI Quiz Generator</h4>
+                <p className="text-gray-400 text-sm">Auto-generate quizzes with AI</p>
+              </div>
+            </Link>
+          </div>
+        </motion.div>
+
         {/* My Courses Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -136,16 +187,28 @@ const InstructorDashboard = () => {
         >
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-3xl font-bold text-white">My Courses</h2>
-            <Link to="/instructor/create-course">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all flex items-center gap-2"
-              >
-                <Plus className="w-5 h-5" />
-                Create New Course
-              </motion.button>
-            </Link>
+            <div className="flex gap-3">
+              <Link to="/instructor/create-course">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-blue-500/50 transition-all flex items-center gap-2"
+                >
+                  <Edit className="w-5 h-5" />
+                  Manual Creation
+                </motion.button>
+              </Link>
+              <Link to="/instructor/create-course-ai">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all flex items-center gap-2"
+                >
+                  <Plus className="w-5 h-5" />
+                  AI Generation
+                </motion.button>
+              </Link>
+            </div>
           </div>
 
           {courses && courses.length > 0 ? (
@@ -163,16 +226,27 @@ const InstructorDashboard = () => {
             <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-12 text-center">
               <BookOpen className="w-20 h-20 text-gray-500 mx-auto mb-4" />
               <h3 className="text-2xl font-bold text-white mb-2">No courses yet</h3>
-              <p className="text-gray-400 mb-6">Start creating courses to share your knowledge</p>
-              <Link to="/instructor/create-course">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all"
-                >
-                  Create Your First Course
-                </motion.button>
-              </Link>
+              <p className="text-gray-400 mb-6">Choose how you want to create your first course</p>
+              <div className="flex gap-4 justify-center">
+                <Link to="/instructor/create-course">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-blue-500/50 transition-all"
+                  >
+                    Manual Creation
+                  </motion.button>
+                </Link>
+                <Link to="/instructor/create-course-ai">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all"
+                  >
+                    AI Generation
+                  </motion.button>
+                </Link>
+              </div>
             </div>
           )}
         </motion.div>

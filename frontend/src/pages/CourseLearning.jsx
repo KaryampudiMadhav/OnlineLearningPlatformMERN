@@ -1,7 +1,8 @@
 /* eslint-disable no-unused-vars */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
 import { 
   PlayCircle, CheckCircle, Lock, BookOpen, Clock, 
   Award, ChevronDown, ChevronRight, ArrowLeft, Loader2,
@@ -9,6 +10,7 @@ import {
 } from 'lucide-react';
 import api from '../config/api';
 import useAuthStore from '../store/authStore';
+import AISupportChatbot from '../components/AISupportChatbot';
 
 const CourseLearning = () => {
   const { id } = useParams();
@@ -22,11 +24,46 @@ const CourseLearning = () => {
   const [expandedSections, setExpandedSections] = useState({});
   const [completingLesson, setCompletingLesson] = useState(false);
 
-  useEffect(() => {
-    fetchCourseAndEnrollment();
-  }, [id]);
+  // Convert YouTube URL to embeddable format
+  const getEmbedUrl = (url) => {
+    if (!url) return null;
+    
+    try {
+      // Already in embed format
+      if (url.includes('/embed/')) {
+        return url;
+      }
+      
+      // Extract video ID from various YouTube URL formats
+      let videoId = null;
+      
+      // Format: https://www.youtube.com/watch?v=VIDEO_ID
+      if (url.includes('watch?v=')) {
+        videoId = url.split('watch?v=')[1]?.split('&')[0];
+      }
+      // Format: https://youtu.be/VIDEO_ID
+      else if (url.includes('youtu.be/')) {
+        videoId = url.split('youtu.be/')[1]?.split('?')[0];
+      }
+      // Format: https://www.youtube.com/v/VIDEO_ID
+      else if (url.includes('/v/')) {
+        videoId = url.split('/v/')[1]?.split('?')[0];
+      }
+      
+      // If we extracted a video ID, return embed URL
+      if (videoId) {
+        return `https://www.youtube.com/embed/${videoId}`;
+      }
+      
+      // If URL doesn't match any pattern, return as is (might be other video platform)
+      return url;
+    } catch (error) {
+      console.error('Error converting video URL:', error);
+      return url;
+    }
+  };
 
-  const fetchCourseAndEnrollment = async () => {
+  const fetchCourseAndEnrollment = useCallback(async () => {
     try {
       setLoading(true);
       const [courseRes, enrollmentRes] = await Promise.all([
@@ -41,7 +78,7 @@ const CourseLearning = () => {
       const userEnrollment = enrollments.find(e => e.course._id === id || e.course === id);
       
       if (!userEnrollment) {
-        alert('You are not enrolled in this course');
+        toast.error('You are not enrolled in this course');
         navigate(`/courses/${id}`);
         return;
       }
@@ -63,12 +100,16 @@ const CourseLearning = () => {
       }
     } catch (error) {
       console.error('Failed to fetch course:', error);
-      alert('Failed to load course. Please try again.');
+      toast.error('Failed to load course. Please try again.');
       navigate('/dashboard');
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, navigate]);
+
+  useEffect(() => {
+    fetchCourseAndEnrollment();
+  }, [fetchCourseAndEnrollment]);
 
   const isLessonCompleted = (sectionIndex, lessonIndex) => {
     if (!enrollment || !enrollment.completedLessons) return false;
@@ -104,7 +145,7 @@ const CourseLearning = () => {
         setTimeout(() => goToNextLesson(), 500);
       }
     } catch (error) {
-      alert('Failed to update progress');
+      toast.error('Failed to update progress');
     } finally {
       setCompletingLesson(false);
     }
@@ -270,10 +311,11 @@ const CourseLearning = () => {
               {currentLesson?.lesson.videoUrl ? (
                 <div className="aspect-video bg-black">
                   <iframe
-                    src={currentLesson.lesson.videoUrl.replace('watch?v=', 'embed/')}
+                    src={getEmbedUrl(currentLesson.lesson.videoUrl)}
                     className="w-full h-full"
                     allowFullScreen
                     title={currentLesson.lesson.title}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   />
                 </div>
               ) : (
@@ -421,6 +463,31 @@ const CourseLearning = () => {
                             </button>
                           );
                         })}
+                        
+                        {/* Module Quiz */}
+                        <div className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border-t border-orange-500/30">
+                          <button
+                            onClick={() => navigate(`/courses/${course._id}/module/${sectionIndex}/quizzes`)}
+                            className="w-full p-4 text-left hover:bg-orange-500/10 transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <FileText className="w-4 h-4 text-white" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-orange-300 truncate">
+                                  🧠 Module {sectionIndex + 1} Quizzes
+                                </p>
+                                <p className="text-sm text-orange-400">
+                                  Test your understanding • {section.quizRecommendation?.totalQuizzes || 3} AI-generated quizzes
+                                </p>
+                              </div>
+                              <div className="text-orange-400">
+                                <ChevronRight className="w-4 h-4" />
+                              </div>
+                            </div>
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -430,6 +497,9 @@ const CourseLearning = () => {
           </div>
         </div>
       </div>
+
+      {/* AI Support Chatbot */}
+      <AISupportChatbot />
     </div>
   );
 };

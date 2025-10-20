@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
 import { 
   Star, Clock, Users, BookOpen, Award, TrendingUp, 
   CheckCircle, PlayCircle, Loader2, ArrowLeft, Heart
@@ -46,10 +47,10 @@ const CourseDetail = () => {
       setEnrolling(true);
       await api.post(`/enrollments/${id}`);
       setEnrolled(true);
-      alert('Successfully enrolled! Check your dashboard.');
+      toast.success('Successfully enrolled! Check your dashboard.');
       navigate('/dashboard');
     } catch (error) {
-      alert(error.response?.data?.message || 'Failed to enroll');
+      toast.error(error.response?.data?.message || 'Failed to enroll');
     } finally {
       setEnrolling(false);
     }

@@ -87,6 +87,33 @@ const courseSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    // Skills-based curriculum structure
+    skills: [
+      {
+        skill: String,
+        difficulty: {
+          type: String,
+          enum: ['beginner', 'intermediate', 'advanced'],
+          default: 'beginner'
+        },
+        steps: [
+          {
+            step: String, // Description of what the learner should do
+            estimatedTime: String, // e.g., "2 hours", "1 week"
+            tags: [String], // e.g., ["project-based", "video", "course"]
+            resources: [String], // 3-5 helpful URLs (YouTube, articles, docs, courses)
+            quiz: [
+              {
+                question: String,
+                options: [String], // Array of 4 strings
+                answer: String // Correct answer from options
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    // Legacy curriculum structure (kept for backward compatibility)
     curriculum: [
       {
         title: String,
@@ -104,6 +131,44 @@ const courseSchema = new mongoose.Schema(
             content: String,
           },
         ],
+        quiz: {
+          title: String,
+          description: String,
+          duration: {
+            type: Number,
+            default: 15
+          },
+          passingScore: {
+            type: Number,
+            default: 70
+          },
+          questions: [
+            {
+              question: String,
+              type: {
+                type: String,
+                enum: ['multiple-choice', 'true-false'],
+                default: 'multiple-choice'
+              },
+              options: [String],
+              correctAnswer: Number,
+              explanation: String,
+              points: {
+                type: Number,
+                default: 1
+              }
+            }
+          ],
+          difficulty: {
+            type: String,
+            enum: ['beginner', 'intermediate', 'advanced'],
+            default: 'beginner'
+          },
+          isActive: {
+            type: Boolean,
+            default: true
+          }
+        }
       },
     ],
     requirements: [
@@ -136,6 +201,44 @@ const courseSchema = new mongoose.Schema(
     isFeatured: {
       type: Boolean,
       default: false,
+    },
+    // Metadata for AI-generated courses
+    metadata: {
+      aiGenerated: {
+        type: Boolean,
+        default: false
+      },
+      generatedAt: Date,
+      aiProvider: String, // e.g., 'gemini', 'openai'
+      skillCount: Number,
+      totalSteps: Number,
+      aiImproved: {
+        type: Boolean,
+        default: false
+      },
+      lastImproved: Date,
+      // Dynamic course generation metadata
+      generationStatus: {
+        type: String,
+        enum: ['pending', 'generating', 'completed', 'failed', 'unknown'],
+        default: 'pending'
+      },
+      generationStarted: Date,
+      generationCompleted: Date,
+      requestedModules: Number,
+      requestedLessons: Number,
+      modulesGenerated: Number,
+      quizzesGenerated: Number,
+      progressPercentage: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 100
+      },
+      failureReason: String,
+      skills: [String],
+      aiEnhanced: Boolean,
+      lastEnhanced: Date
     },
   },
   {

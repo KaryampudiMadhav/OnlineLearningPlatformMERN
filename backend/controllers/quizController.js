@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Quiz = require('../models/Quiz');
 const QuizAttempt = require('../models/QuizAttempt');
 const Course = require('../models/Course');
@@ -686,6 +687,126 @@ exports.getCourseStructureWithQuizzes = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch course structure',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Get quizzes for a specific module
+// @route   GET /api/quizzes/course/:courseId/module/:moduleIndex/all
+// @access  Public
+exports.getModuleQuizzes = async (req, res) => {
+  try {
+    const { courseId, moduleIndex } = req.params;
+    const moduleIdx = parseInt(moduleIndex);
+
+    // First check if course has embedded quizzes in curriculum
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: 'Course not found'
+      });
+    }
+
+    // Check for embedded quiz in curriculum
+    if (course.curriculum && 
+        course.curriculum[moduleIdx] && 
+        course.curriculum[moduleIdx].quiz &&
+        course.curriculum[moduleIdx].quiz.questions &&
+        course.curriculum[moduleIdx].quiz.questions.length > 0) {
+      
+      const moduleQuiz = course.curriculum[moduleIdx].quiz;
+      
+      // Generate three difficulty variants from the embedded quiz
+      const quizzes = [];
+      const difficulties = [
+        { 
+          level: 'Beginner', 
+          questionRatio: 0.6, 
+          timeModifier: -5, 
+          passingModifier: -10,
+          description: 'Start with fundamental concepts and basic understanding'
+        },
+        { 
+          level: 'Intermediate', 
+          questionRatio: 1, 
+          timeModifier: 0, 
+          passingModifier: 0,
+          description: 'Test your comprehensive understanding of the module'
+        },
+        { 
+          level: 'Advanced', 
+          questionRatio: 1, 
+          timeModifier: 10, 
+          passingModifier: 15,
+          description: 'Challenge yourself with higher standards and deeper analysis'
+        }
+      ];
+
+      difficulties.forEach(diff => {
+        const questionCount = Math.max(3, Math.floor(moduleQuiz.questions.length * diff.questionRatio));
+        const selectedQuestions = moduleQuiz.questions.slice(0, questionCount);
+        
+        quizzes.push({
+          _id: `${courseId}_${moduleIdx}_${diff.level.toLowerCase()}`,
+          title: `${moduleQuiz.title} - ${diff.level}`,
+          description: diff.description,
+          difficulty: diff.level,
+          duration: Math.max(5, (moduleQuiz.duration || 15) + diff.timeModifier),
+          passingScore: Math.min(100, Math.max(50, (moduleQuiz.passingScore || 70) + diff.passingModifier)),
+          questions: selectedQuestions,
+          questionCount: selectedQuestions.length,
+          isEmbedded: true
+        });
+      });
+
+      return res.status(200).json({
+        success: true,
+        count: quizzes.length,
+        quizzes,
+        source: 'embedded'
+      });
+    }
+
+    // Fallback: Check for separate Quiz documents
+    const quizzes = await Quiz.find({ 
+      course: courseId, 
+      moduleIndex: moduleIdx,
+      isActive: true 
+    })
+    .select('title description duration passingScore questions difficulty')
+    .lean();
+
+    if (quizzes.length > 0) {
+      // Format existing quizzes to match expected structure
+      const formattedQuizzes = quizzes.map(quiz => ({
+        ...quiz,
+        questionCount: quiz.questions.length,
+        isEmbedded: false
+      }));
+
+      return res.status(200).json({
+        success: true,
+        count: formattedQuizzes.length,
+        quizzes: formattedQuizzes,
+        source: 'database'
+      });
+    }
+
+    // No quizzes found
+    res.status(200).json({
+      success: true,
+      count: 0,
+      quizzes: [],
+      message: 'No quizzes found for this module'
+    });
+
+  } catch (error) {
+    console.error('Get module quizzes error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch module quizzes',
       error: error.message
     });
   }
